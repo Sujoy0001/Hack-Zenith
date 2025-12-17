@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+.font1 {
+  font-family: "BBH Bartle", sans-serif;
+  font-style: normal;
+}
+
+.font2 {
+  font-family: "Stack Sans Text", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}

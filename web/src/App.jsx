@@ -1,35 +1,40 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import Header from "./components/Header";
+import Button from "./components/ui/Button.jsx";
+import { ArrowRight } from "lucide-react";
+import ChangeText from "./components/ui/ChangeText.jsx";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="h-full flex-1 flex items-center justify-center p-8">
+        <div className="max-w-4xl text-center">
+          <ChangeText
+            texts={[
+              "Report missing products",
+              "Upload found items",
+              "AI matches details instantly",
+              "Chat securely with users",
+            ]}
+          />
+
+          <h1 className="text-5xl md:text-7xl font-semibold tracking-tight font2">
+            Welcome to FindIn!
+            <span className="block mt-3 text-red-800">
+              Find what matters, faster.
+            </span>
+          </h1>
+
+          <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto font2">
+            Discover and locate lost or found items effortlessly with FindIn.
+            Our AI-powered system connects people and products in seconds.
+          </p>
+
+          <div className="group flex mt-8 justify-center gap-4">
+            <Button text="Post your first issue" variant="roundb" icon={ArrowRight}  iconPosition="right" />
+            <Button text="Login & Explore" variant="round" icon={ArrowRight}  iconPosition="right" />
+          </div>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+  );
 }
 
-export default App
+export default App;
