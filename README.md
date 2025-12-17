@@ -1,2 +1,2 @@
-# -Hack-Zenith
+# Hack-Zenith
 GDGoC BCREC
