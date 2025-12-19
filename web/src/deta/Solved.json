@@ -1,0 +1,78 @@
+[
+  {
+    "id": 583214,
+    "user": {
+      "name": "Amit Sharma",
+      "location": "Hostel 5",
+      "avatar": "https://i.pravatar.cc/150?img=12"
+    },
+    "text": "I lost my black wallet near Hostel 5 canteen yesterday evening. It contains my ID card and some cash. Please contact me if found.",
+    "images": [
+      "data:image/jpeg;base64,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"
+    ],
+    "tags": ["lost", "wallet", "hostel"],
+    "upvotes": 18,
+    "isSolved": true
+  },
+  {
+    "id": 694327,
+    "user": {
+      "name": "Sneha Roy",
+      "location": "Central Library",
+      "avatar": "https://i.pravatar.cc/150?img=47"
+    },
+    "text": "Lost my blue water bottle in the Central Library reading hall. It has a sticker with my name on it.",
+    "images": [
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHaoZRTn6p9lMeNHk_3bZga4El2fMA_jMWPQ&s"
+    ],
+    "tags": ["lost", "water-bottle", "library"],
+    "upvotes": 11,
+    "isSolved": true
+  },
+  {
+    "id": 781459,
+    "user": {
+      "name": "Rahul Verma",
+      "location": "Main Gate",
+      "avatar": "https://i.pravatar.cc/150?img=33"
+    },
+    "text": "I misplaced my college ID card near the main gate around 9 AM today. Requesting anyone who finds it to inform me.",
+    "images": [
+      "https://images.unsplash.com/photo-1612831455546-8c8b6c3b7a7f"
+    ],
+    "tags": ["lost", "id-card", "urgent"],
+    "upvotes": 29,
+    "isSolved": true
+  },
+  {
+    "id": 846291,
+    "user": {
+      "name": "Priya Das",
+      "location": "CSE Block",
+      "avatar": "https://i.pravatar.cc/150?img=25"
+    },
+    "text": "Lost my white earphones near the CSE block classrooms. They were inside a small pouch.",
+    "images": [
+      "https://images.unsplash.com/photo-1585386959984-a4155224a1b0",
+      "https://images.unsplash.com/photo-1518445691048-9d64c7b9b0c2"
+    ],
+    "tags": ["lost", "earphones", "cse"],
+    "upvotes": 14,
+    "isSolved": true
+  },
+  {
+    "id": 917503,
+    "user": {
+      "name": "Ankit Kumar",
+      "location": "Sports Ground",
+      "avatar": "https://i.pravatar.cc/150?img=60"
+    },
+    "text": "Lost my sports shoes near the football ground after practice. They are blue with white stripes.",
+    "images": [
+      "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77"
+    ],
+    "tags": ["lost", "shoes", "sports"],
+    "upvotes": 22,
+    "isSolved": true
+  }
+]
