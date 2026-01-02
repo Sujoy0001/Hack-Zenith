@@ -99,7 +99,7 @@ export default function PostCard({ post }) {
               {images.slice(0, 5).map((img, index) => (
                 <div
                   key={index}
-                  className="flex-shrink-0 w-full max-w-md snap-center"
+                  className="shrink-0 w-full max-w-md snap-center"
                 >
                   <div className="relative overflow-hidden rounded-xl bg-gray-50 aspect-4/3">
                     <img
@@ -145,7 +145,7 @@ export default function PostCard({ post }) {
           {tags.map((tag, i) => (
             <span
               key={i}
-              className="text-xs font-medium bg-indigo-50 text-red-800 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition"
+              className="text-xs font2 font-medium bg-indigo-50 text-red-800 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition"
             >
               #{tag}
             </span>
