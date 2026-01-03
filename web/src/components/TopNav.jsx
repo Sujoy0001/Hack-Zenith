@@ -29,7 +29,7 @@ export default function TopNav() {
   }, []);
 
   return (
-    <div className="w-full h-16 sticky top-0 z-50 bg-white shadow">
+    <div className="w-full h-16 sticky top-0 z-50 bg-white border-b border-gray-200 flex items-center justify-end px-4">
       <div className="h-full px-6 flex items-center justify-end gap-4">
 
         <Link to='/index/notifications'>

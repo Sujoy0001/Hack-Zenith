@@ -7,7 +7,7 @@ export default function Layout2() {
 
   return (
     <div className="flex h-screen w-full">
-      <div className="max-w-6xl w-full mx-auto flex gap-2">
+      <div className="max-w-full w-full mx-auto flex gap-0">
         <SideNav />
         <main className="flex-1 overflow-y-auto">
             <TopNav />
