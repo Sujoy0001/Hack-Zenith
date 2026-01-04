@@ -7,7 +7,7 @@ export default function Index() {
   const [type, setType] = useState("all");
   const [location, setLocation] = useState("");
   const [date, setDate] = useState("");
-  const [categories, setCategories] = useState(["electronics"]);
+  const [categories, setCategories] = useState([]);
 
   // Categories derived from your JSON tags
   const categoryOptions = [
@@ -58,21 +58,21 @@ export default function Index() {
   };
 
   return (
-    <div className="flex gap-6 p-6">
-      
+    <div className="flex flex-col shrink-0 md:flex-row">
+     
       {/* FILTER PANEL */}
-      <aside className="w-72 shrink-0 rounded-2xl border bg-white p-5 space-y-6">
-        <h2 className="font-semibold text-lg">Filters</h2>
+      <aside className="w-82 font2 h-screen fixed flex flex-col bg-white shrink-0 border-r border-gray-300 p-5 space-y-6">
+        <h2 className="font-semibold text-2xl">Filters</h2>
 
         {/* Type */}
         <div>
-          <p className="text-sm font-medium mb-2">Type</p>
+          <p className="text-md font-medium mb-2">Type</p>
           <div className="flex bg-gray-100 rounded-lg p-1">
             {["all", "lost", "found"].map((t) => (
               <button
                 key={t}
                 onClick={() => setType(t)}
-                className={`flex-1 text-sm py-1.5 rounded-md ${
+                className={`flex-1 text-sm py-1.5 rounded-md cursor-pointer ${
                   type === t
                     ? "bg-white shadow font-semibold"
                     : "text-gray-500"
@@ -84,9 +84,9 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Location */}
+      
         <div>
-          <p className="text-sm font-medium mb-2">Location</p>
+          <p className="text-md font-medium mb-2">Location</p>
           <div className="relative">
             <MapPin className="absolute left-3 top-2.5 text-gray-400" size={16} />
             <input
@@ -98,9 +98,9 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Date */}
+        
         <div>
-          <p className="text-sm font-medium mb-2">Date Posted</p>
+          <p className="text-md font-medium mb-2">Date Posted</p>
           <div className="relative">
             <Calendar
               className="absolute left-3 top-2.5 text-gray-400"
@@ -115,13 +115,13 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Categories */}
+        
         <div>
           <div className="flex justify-between items-center mb-2">
-            <p className="text-sm font-medium">Categories</p>
+            <p className="text-md font-medium">Categories</p>
             <button
               onClick={() => setCategories(categoryOptions)}
-              className="text-xs text-blue-600"
+              className="text-xs text-blue-600 cursor-pointer hover:underline"
             >
               Select All
             </button>
@@ -146,14 +146,14 @@ export default function Index() {
 
         <button
           onClick={() => {}}
-          className="w-full mt-4 bg-blue-600 text-white py-2 rounded-xl font-medium"
+          className="w-full mt-4 bg-blue-600 text-white py-3 rounded-md font-medium cursor-pointer hover:bg-blue-700"
         >
           Apply Filters
         </button>
       </aside>
 
-      {/* POSTS */}
-      <main className="flex-1 space-y-4">
+
+      <main className="flex flex-col font2 w-full ml-80 space-y-4 overflow-y-auto justify-center items-center mx-auto p-6 mb-20">
         {filteredPosts.length > 0 ? (
           filteredPosts.map((post) => (
             <PostCard key={post.id} post={post} />
