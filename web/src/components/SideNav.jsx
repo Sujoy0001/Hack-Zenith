@@ -19,7 +19,7 @@ export default function SideNav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <aside className="h-screen flex flex-col justify-between py-6 px-3 w-54 lg:w-74 border-r border-gray-200">
+    <aside className="h-screen bg-white flex flex-col justify-between py-6 px-3 w-54 lg:w-74 border-r border-gray-200">
         <div className="">
             <div className="flex items-left px-4 gap-3">
                 <Link to="/index">
