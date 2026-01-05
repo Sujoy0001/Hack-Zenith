@@ -1,8 +1,7 @@
+from config import MONGO_URL
 from motor.motor_asyncio import AsyncIOMotorClient
-from config import MONGODB_URL, DATABASE_NAME
 
-client = AsyncIOMotorClient(MONGODB_URL)
-database = client[DATABASE_NAME]
-
-def get_database():
-    return database
+client = AsyncIOMotorClient(MONGO_URL)
+db = client.hackzenith
+user_collection = db.users
+exdate_collection = db.exdate
