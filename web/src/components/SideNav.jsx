@@ -19,7 +19,7 @@ export default function SideNav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <aside className="h-screen flex flex-col justify-between py-6 px-2 w-54 lg:w-64">
+    <aside className="h-screen bg-white flex flex-col justify-between py-6 px-3 w-54 lg:w-74 border-r border-gray-200">
         <div className="">
             <div className="flex items-left px-4 gap-3">
                 <Link to="/index">
@@ -37,10 +37,10 @@ export default function SideNav() {
                     to={path}
                     end
                     className={({ isActive }) =>
-                    `text-left rounded-4xl py-1.5 
+                    `text-left rounded-4xl py-1.5 gap-3
                     ${isActive
-                        ? "text-red-800 bg-gray-200 rounded-4xl"
-                        : "hover:bg-gray-200 rounded-4xl"}`
+                        ? "text-red-800 bg-gray-200 rounded-lg font-medium"
+                        : "hover:bg-gray-200 rounded-lg"}`
                     }
                 >
                     <Button text={name} variant="free" icon={Icon}/>

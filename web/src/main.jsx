@@ -15,6 +15,7 @@ import ViewPage from './pages/ViewPage';
 import ProfilePage from './pages/ProfilePage';
 import { IssueModalProvider } from './context/IssueModalContext';
 import NotificationsPage from './pages/NotificationsPage';
+import { AuthProvider } from "./context/AuthContext";
 
 const router = createBrowserRouter([
   {
@@ -44,7 +45,9 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <IssueModalProvider>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </IssueModalProvider>
   </React.StrictMode>
 );
