@@ -1,12 +1,13 @@
-from pydantic import BaseModel, EmailStr, HttpUrl
+from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 class User(BaseModel):
-    id: str
+    uid: str
+    email: str
     name: str
-    email: EmailStr
-    avatar: str | None = None
-    phone: str | None = None
-    address: str | None = None
+    photoURL: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
 
 class LocationModel(BaseModel):
     place: str

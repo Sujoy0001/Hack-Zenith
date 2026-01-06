@@ -1,14 +1,21 @@
-from pymongo.mongo_client import MongoClient
-from config.mongo import MONGO_URL
+# db/mongodb.py
+from motor.motor_asyncio import AsyncIOMotorClient
+import os
 
-client = MongoClient(MONGO_URL)
+MONGO_URL = os.getenv("MONGO_URL")
+DATABASE_NAME = "hackzenith"
+
+# Create AsyncIOMotorClient
+client = AsyncIOMotorClient(MONGO_URL)
+# Get database
+db = client[DATABASE_NAME]
+
+# Get collections
+users_collection = db["users"]
+posts_collection = db["posts"]
 
 try:
     client.admin.command('ping')
-    print("Pinged your deployment. You successfully connected to MongoDB!")
+    print("Successfully connected to MongoDB with Motor!")
 except Exception as e:
-    print(e)
-
-db = client.hackzenith
-users_collection = db["users"]
-posts_collection = db["posts"]
+    print(f"Error connecting to MongoDB: {e}")

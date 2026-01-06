@@ -31,7 +31,7 @@ export default function PostCard({ post }) {
 
   const handleShare = async (e) => {
     e.stopPropagation();
-    const shareUrl = `${window.location.origin}/post/${id}`;
+    const shareUrl = `${window.location.origin}/index/post/${id}`;
     try {
       if (navigator.share) {
         await navigator.share({ 
@@ -65,7 +65,7 @@ export default function PostCard({ post }) {
 
   return (
     <article 
-      className="group w-full max-w-3xl bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 p-6 space-y-5 hover:border-gray-300 active:scale-[0.998]"
+      className="group w-full font2 max-w-3xl bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 p-6 space-y-5 hover:border-gray-300 active:scale-[0.998]"
     >
       
       {/* Header */}
@@ -113,12 +113,12 @@ export default function PostCard({ post }) {
           )}
           <span
             className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${
-              type === "lost"
+              type === "LOST"
                 ? "bg-red-50 text-red-600 border border-red-100"
                 : "bg-green-50 text-green-600 border border-green-100"
             }`}
           >
-            {type === "lost" ? "Lost Item" : "Found Item"}
+            {type === "LOST" ? "Lost Item" : "Found Item"}
           </span>
         </div>
       </header>

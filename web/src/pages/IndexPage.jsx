@@ -14,7 +14,6 @@ export default function Index() {
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-  // Categories derived from your JSON tags
   const categoryOptions = [
     "electronics",
     "clothing",
@@ -23,56 +22,69 @@ export default function Index() {
     "pets",
     "keys",
     "documents",
-    "jewelry"
+    "jewelry",
   ];
+
+  /* ---------------- FETCH POSTS ---------------- */
 
   useEffect(() => {
     async function fetchPosts() {
-      setLoading(true);
-      setError(null);
-
       try {
-        const response = await fetch(`${API_BASE_URL}/posts/get_all`);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
+        setLoading(true);
+        const res = await fetch(`${API_BASE_URL}/posts/get_all`);
+        if (!res.ok) throw new Error("Failed to fetch posts");
+        const data = await res.json();
         setPosts(data);
       } catch (err) {
-        setError("Failed to fetch posts. Please try again later.");
         console.error(err);
+        setError("Failed to fetch posts. Please try again.");
       } finally {
         setLoading(false);
       }
     }
+
     fetchPosts();
-  }, []);
+  }, [API_BASE_URL]);
+
+  /* ---------------- FILTER LOGIC ---------------- */
 
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
-      // Type filter
-      if (type !== "all" && post.type !== type) return false;
+      /* TYPE FILTER */
+      if (
+        type !== "all" &&
+        post.type?.toLowerCase() !== type
+      ) {
+        return false;
+      }
 
-      // Location filter
+      /* LOCATION FILTER */
       if (
         location &&
         !post.location?.place
           ?.toLowerCase()
           .includes(location.toLowerCase())
-      )
+      ) {
         return false;
+      }
 
-      // Date filter (assuming created_at is ISO string)
-      if (date && !post.created_at.startsWith(date)) return false;
+      /* DATE FILTER */
+      if (
+        date &&
+        !post.created_at?.startsWith(date)
+      ) {
+        return false;
+      }
 
-      // Category filter (tags)
+      /* CATEGORY (TAGS) FILTER */
       if (
         categories.length > 0 &&
-        !categories.some((cat) => post.tags.includes(cat))
-      )
+        !categories.some((cat) =>
+          post.tags?.map((t) => t.toLowerCase()).includes(cat)
+        )
+      ) {
         return false;
+      }
 
       return true;
     });
@@ -86,21 +98,23 @@ export default function Index() {
     );
   };
 
-  return (
-    <div className="flex flex-col shrink-0 md:flex-row">
-      {/* FILTER PANEL */}
-      <aside className="w-82 font2 h-screen fixed flex flex-col bg-white shrink-0 border-r border-gray-300 p-5 space-y-6">
-        <h2 className="font-semibold text-2xl">Filters</h2>
+  /* ---------------- UI ---------------- */
 
-        {/* Type */}
+  return (
+    <div className="flex flex-col md:flex-row">
+      {/* FILTER SIDEBAR */}
+      <aside className="w-80 h-screen fixed bg-white border-r p-5 space-y-6">
+        <h2 className="text-2xl font-semibold">Filters</h2>
+
+        {/* TYPE */}
         <div>
-          <p className="text-md font-medium mb-2">Type</p>
+          <p className="font-medium mb-2">Type</p>
           <div className="flex bg-gray-100 rounded-lg p-1">
             {["all", "lost", "found"].map((t) => (
               <button
                 key={t}
                 onClick={() => setType(t)}
-                className={`flex-1 text-sm py-1.5 rounded-md cursor-pointer ${
+                className={`flex-1 py-1.5 rounded-md text-sm ${
                   type === t
                     ? "bg-white shadow font-semibold"
                     : "text-gray-500"
@@ -112,44 +126,41 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Location */}
+        {/* LOCATION */}
         <div>
-          <p className="text-md font-medium mb-2">Location</p>
+          <p className="font-medium mb-2">Location</p>
           <div className="relative">
             <MapPin className="absolute left-3 top-2.5 text-gray-400" size={16} />
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="City or Place"
-              className="w-full pl-9 pr-3 py-2 rounded-lg border text-sm"
+              className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm"
             />
           </div>
         </div>
 
-        {/* Date Posted */}
+        {/* DATE */}
         <div>
-          <p className="text-md font-medium mb-2">Date Posted</p>
+          <p className="font-medium mb-2">Date Posted</p>
           <div className="relative">
-            <Calendar
-              className="absolute left-3 top-2.5 text-gray-400"
-              size={16}
-            />
+            <Calendar className="absolute left-3 top-2.5 text-gray-400" size={16} />
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-lg border text-sm"
+              className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm"
             />
           </div>
         </div>
 
-        {/* Categories */}
+        {/* CATEGORIES */}
         <div>
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-md font-medium">Categories</p>
+          <div className="flex justify-between mb-2">
+            <p className="font-medium">Categories</p>
             <button
               onClick={() => setCategories(categoryOptions)}
-              className="text-xs text-blue-600 cursor-pointer hover:underline"
+              className="text-xs text-blue-600 hover:underline"
             >
               Select All
             </button>
@@ -166,31 +177,32 @@ export default function Index() {
                   checked={categories.includes(cat)}
                   onChange={() => toggleCategory(cat)}
                 />
-                {cat.replace("-", " ").toUpperCase()}
+                {cat.toUpperCase()}
               </label>
             ))}
           </div>
         </div>
 
-        {/* Apply button (optional) */}
         <button
           onClick={() => {}}
-          className="w-full mt-4 bg-blue-600 text-white py-3 rounded-md font-medium cursor-pointer hover:bg-blue-700"
+          className="w-full bg-blue-600 text-white py-3 rounded-md font-medium hover:bg-blue-700"
         >
           Apply Filters
         </button>
       </aside>
 
-      {/* POSTS DISPLAY */}
-      <main className="flex flex-col font2 w-full ml-80 space-y-4 overflow-y-auto justify-center items-center mx-auto p-6 mb-20">
+      {/* POSTS */}
+      <main className="ml-80 w-full p-6 flex flex-col items-center gap-4">
         {loading ? (
-          <p className="text-center text-gray-500 mt-10">Loading posts...</p>
+          <p className="text-gray-500 mt-10">Loading posts...</p>
         ) : error ? (
-          <p className="text-center text-red-500 mt-10">{error}</p>
+          <p className="text-red-500 mt-10">{error}</p>
         ) : filteredPosts.length > 0 ? (
-          filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
+          filteredPosts.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))
         ) : (
-          <p className="text-center text-gray-500 mt-10">
+          <p className="text-gray-500 mt-10">
             No posts found matching filters.
           </p>
         )}
