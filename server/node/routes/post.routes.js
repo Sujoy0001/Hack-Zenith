@@ -1,54 +1,61 @@
 const express = require("express");
+const Post = require("../models/Post");
+const cloudinary = require("../config/cloudinary");
+const upload = require("../middleware/upload");
+
 const router = express.Router();
 
-const upload = require("../middleware/upload");
-const cloudinary = require("../config/cloudinary");
-const Post = require("../models/Post");
+/**
+ * CREATE POST
+ */
+router.post(
+  "/create",
+  upload.array("images", 5),
+  async (req, res) => {
+    try {
+      const {
+        types,
+        title,
+        description,
+        tags,
+        place,
+        area,
+        user,
+      } = req.body;
 
-/* ---------- Create Post ---------- */
-router.post("/", upload.array("images", 5), async (req, res) => {
-  try {
-    const { user, type, title, description, location, tags } = req.body;
-
-    let imageUrls = [];
-
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(
-          `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
-          { folder: "posts" }
-        );
+      // Upload images to Cloudinary
+      const imageUrls = [];
+      for (const file of req.files || []) {
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: "lost_found",
+        });
         imageUrls.push(result.secure_url);
       }
+
+      const post = new Post({
+        types,
+        title,
+        description,
+        tags: tags ? JSON.parse(tags) : [],
+        images: imageUrls,
+        location: {
+          place,
+          area,
+        },
+        user: JSON.parse(user),
+      });
+
+      await post.save();
+
+      res.status(201).json({
+        message: "Post created successfully",
+        post,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to create post" });
     }
-
-    const post = await Post.create({
-      user: user ? JSON.parse(user) : null,
-      type,
-      title,
-      description,
-      location: location ? JSON.parse(location) : null,
-      tags: tags ? JSON.parse(tags) : [],
-      images: imageUrls,
-    });
-
-    res.status(201).json(post);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
   }
-});
-
-/* ---------- Get All Posts ---------- */
-router.get("/", async (req, res) => {
-  const posts = await Post.find().sort({ created_at: -1 });
-  res.json(posts);
-});
-
-/* ---------- Get Single Post ---------- */
-router.get("/:id", async (req, res) => {
-  const post = await Post.findById(req.params.id);
-  if (!post) return res.status(404).json({ message: "Post not found" });
-  res.json(post);
-});
+);
 
 module.exports = router;

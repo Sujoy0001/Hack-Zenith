@@ -1,33 +1,33 @@
 const mongoose = require("mongoose");
 
-const UserSchema = new mongoose.Schema(
-  {
-    username: { type: String, default: null },
-    email: { type: String, default: null },
-    photo: { type: String, default: null },
-  },
-  { _id: false }
-);
+const LocationSchema = new mongoose.Schema({
+  place: { type: String, required: true },
+  area: { type: String, required: true },
+});
 
-const LocationSchema = new mongoose.Schema(
-  {
-    area: { type: String, default: null },
-    place: { type: String, default: null },
-  },
-  { _id: false }
-);
+const UserSchema = new mongoose.Schema({
+  uid: { type: String, required: true },
+  email: { type: String, required: true },
+  name: { type: String, required: true },
+  photoURL: String,
+  phone: String,
+  address: String,
+});
 
 const PostSchema = new mongoose.Schema({
-  user: { type: UserSchema, default: null },
-  type: { type: String, default: null },
-  title: { type: String, default: null },
-  description: { type: String, default: null },
-  location: { type: LocationSchema, default: null },
-  tags: { type: [String], default: [] },
+  types: {
+    type: String,
+    enum: ["lost", "found"],
+    required: true,
+  },
+  title: { type: String, required: true },
+  user: { type: UserSchema, required: true },
+  description: { type: String, required: true },
   images: { type: [String], default: [] },
-  upvotes: { type: Number, default: 0 },
-  is_solved: { type: Boolean, default: false },
+  location: { type: LocationSchema, required: true },
+  tags: { type: [String], default: [] },
   created_at: { type: Date, default: Date.now },
+  is_solved: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model("Post", PostSchema);
