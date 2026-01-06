@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="composeApp-jvm">
+    <output-path>$PROJECT_DIR$/client/FindIn-app/composeApp/build/libs</output-path>
+    <root id="archive" name="composeApp-jvm.jar">
+      <element id="module-output" name="FindIn-app.composeApp.jvmMain" />
+    </root>
+  </artifact>
+</component>
