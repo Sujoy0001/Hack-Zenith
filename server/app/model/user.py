@@ -1,10 +1,13 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, HttpUrl
 
 class User(BaseModel):
-    id: int
+    id: str
     name: str
     email: EmailStr
-    is_active: bool = True     
-    is_verified: bool = False
-    created_at: str
-    updated_at: str
+    avatar: str | None = None
+    phone: str | None = None
+    address: str | None = None
+
+class LocationModel(BaseModel):
+    place: str
+    area: str

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  ThumbsUp,
   Share2,
   MapPin,
   Eye,
@@ -21,22 +20,14 @@ export default function PostCard({ post }) {
     location,
     images = [],
     tags = [],
-    upvotes = 0,
     created_at,
     is_solved,
     description,
     urgency
   } = post;
 
-  const [liked, setLiked] = useState(false);
-  const [voteCount, setVoteCount] = useState(upvotes);
   const navigate = useNavigate();
 
-  const handleLike = (e) => {
-    e.stopPropagation();
-    setLiked((prev) => !prev);
-    setVoteCount((prev) => (liked ? prev - 1 : prev + 1));
-  };
 
   const handleShare = async (e) => {
     e.stopPropagation();
@@ -208,18 +199,6 @@ export default function PostCard({ post }) {
             <Clock size={16} />
             {formatTime(created_at)}
           </span>
-          
-          <button
-            onClick={handleLike}
-            className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg transition-all ${
-              liked
-                ? "bg-red-50 text-red-600 border border-red-100"
-                : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
-            }`}
-          >
-            <ThumbsUp size={18} className={liked ? "fill-red-600" : ""} />
-            <span className="font-medium">{voteCount}</span>
-          </button>
         </div>
 
         <div className="flex items-center gap-3">

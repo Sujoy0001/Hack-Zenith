@@ -1,13 +1,18 @@
-import React, { useMemo, useState } from "react";
-import posts from "../deta/Posts.json";
+import React, { useMemo, useState, useEffect } from "react";
 import PostCard from "../components/ui/PostCard";
 import { MapPin, Calendar } from "lucide-react";
 
 export default function Index() {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const [type, setType] = useState("all");
   const [location, setLocation] = useState("");
   const [date, setDate] = useState("");
   const [categories, setCategories] = useState([]);
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // Categories derived from your JSON tags
   const categoryOptions = [
@@ -20,6 +25,30 @@ export default function Index() {
     "documents",
     "jewelry"
   ];
+
+  useEffect(() => {
+    async function fetchPosts() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/posts/get_all`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setPosts(data);
+      } catch (err) {
+        setError("Failed to fetch posts. Please try again later.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchPosts();
+  }, []);
 
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
@@ -35,7 +64,7 @@ export default function Index() {
       )
         return false;
 
-      // Date filter
+      // Date filter (assuming created_at is ISO string)
       if (date && !post.created_at.startsWith(date)) return false;
 
       // Category filter (tags)
@@ -47,7 +76,7 @@ export default function Index() {
 
       return true;
     });
-  }, [type, location, date, categories]);
+  }, [posts, type, location, date, categories]);
 
   const toggleCategory = (cat) => {
     setCategories((prev) =>
@@ -59,7 +88,6 @@ export default function Index() {
 
   return (
     <div className="flex flex-col shrink-0 md:flex-row">
-     
       {/* FILTER PANEL */}
       <aside className="w-82 font2 h-screen fixed flex flex-col bg-white shrink-0 border-r border-gray-300 p-5 space-y-6">
         <h2 className="font-semibold text-2xl">Filters</h2>
@@ -84,7 +112,7 @@ export default function Index() {
           </div>
         </div>
 
-      
+        {/* Location */}
         <div>
           <p className="text-md font-medium mb-2">Location</p>
           <div className="relative">
@@ -98,7 +126,7 @@ export default function Index() {
           </div>
         </div>
 
-        
+        {/* Date Posted */}
         <div>
           <p className="text-md font-medium mb-2">Date Posted</p>
           <div className="relative">
@@ -115,7 +143,7 @@ export default function Index() {
           </div>
         </div>
 
-        
+        {/* Categories */}
         <div>
           <div className="flex justify-between items-center mb-2">
             <p className="text-md font-medium">Categories</p>
@@ -144,6 +172,7 @@ export default function Index() {
           </div>
         </div>
 
+        {/* Apply button (optional) */}
         <button
           onClick={() => {}}
           className="w-full mt-4 bg-blue-600 text-white py-3 rounded-md font-medium cursor-pointer hover:bg-blue-700"
@@ -152,12 +181,14 @@ export default function Index() {
         </button>
       </aside>
 
-
+      {/* POSTS DISPLAY */}
       <main className="flex flex-col font2 w-full ml-80 space-y-4 overflow-y-auto justify-center items-center mx-auto p-6 mb-20">
-        {filteredPosts.length > 0 ? (
-          filteredPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))
+        {loading ? (
+          <p className="text-center text-gray-500 mt-10">Loading posts...</p>
+        ) : error ? (
+          <p className="text-center text-red-500 mt-10">{error}</p>
+        ) : filteredPosts.length > 0 ? (
+          filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
         ) : (
           <p className="text-center text-gray-500 mt-10">
             No posts found matching filters.

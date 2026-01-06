@@ -1,7 +1,14 @@
-from config import MONGO_URL
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.mongo_client import MongoClient
+from config.mongo import MONGO_URL
 
-client = AsyncIOMotorClient(MONGO_URL)
+client = MongoClient(MONGO_URL)
+
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
+
 db = client.hackzenith
-user_collection = db.users
-exdate_collection = db.exdate
+users_collection = db["users"]
+posts_collection = db["posts"]
