@@ -1,10 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from router import user, post, ws
-from brack import break_posts_collection
-from ai import match_lost_found
-from db.mongodb import found_collection
 import asyncio
+from ai.brack import break_posts_collection, monitor_found_collection
 
 app = FastAPI()
 
@@ -28,22 +26,12 @@ app.include_router(user.router, prefix="/test")
 app.include_router(post.router)
 app.include_router(ws.router)
 
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(start_background())
 
-async def monitor_found_collection():
-    previous_count = await found_collection.count_documents({})
 
-    while True:
-        await asyncio.sleep(30)
-
-        current_count = await found_collection.count_documents({})
-
-        if current_count > previous_count:
-            increase = current_count - previous_count
-            print(f"Found collection increased by {increase}")
-
-            await match_lost_found()
-            await break_posts_collection()
-
-            previous_count = current_count
-        else:
-            print("No new found posts")
+async def start_background():
+    await asyncio.sleep(30)
+    await break_posts_collection()
+    asyncio.create_task(monitor_found_collection())

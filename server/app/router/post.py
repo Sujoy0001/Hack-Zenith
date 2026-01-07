@@ -5,7 +5,7 @@ from bson import ObjectId
 from db.mongodb import posts_collection
 import cloudinary.uploader
 from model.post import PostCreateModel, PostResponseModel
-from ..brack import break_posts_collection
+from ai.brack import break_posts_collection
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
