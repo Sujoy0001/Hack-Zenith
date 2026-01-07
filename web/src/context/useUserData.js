@@ -7,7 +7,7 @@ export function useUserData() {
 
   const { currentUser, userProfile } = auth;
 
-  return {
+  const userData = {
     uid: currentUser.uid,
     email: currentUser.email,
     name: userProfile?.name || currentUser.displayName || "",
@@ -15,4 +15,8 @@ export function useUserData() {
     phone: userProfile?.phone || "",
     address: userProfile?.address || "",
   };
+
+  console.log("User Data:", userData);
+
+  return userData;
 }

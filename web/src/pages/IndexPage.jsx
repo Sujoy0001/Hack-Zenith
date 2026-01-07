@@ -1,16 +1,17 @@
 import React, { useMemo, useState, useEffect } from "react";
 import PostCard from "../components/ui/PostCard";
-import { MapPin, Calendar } from "lucide-react";
+import { MapPin, Calendar, RefreshCw } from "lucide-react";
 
 export default function Index() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [type, setType] = useState("all");
+  const [types, setTypes] = useState("all");
   const [location, setLocation] = useState("");
   const [date, setDate] = useState("");
   const [categories, setCategories] = useState([]);
+  const [sort, setSort] = useState("newest");
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -26,35 +27,31 @@ export default function Index() {
   ];
 
   /* ---------------- FETCH POSTS ---------------- */
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(`${API_BASE_URL}/posts/get_all`);
+      if (!res.ok) throw new Error("Failed to fetch posts");
+      const data = await res.json();
+      setPosts(data);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch posts. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchPosts() {
-      try {
-        setLoading(true);
-        const res = await fetch(`${API_BASE_URL}/posts/get_all`);
-        if (!res.ok) throw new Error("Failed to fetch posts");
-        const data = await res.json();
-        setPosts(data);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to fetch posts. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchPosts();
   }, [API_BASE_URL]);
 
   /* ---------------- FILTER LOGIC ---------------- */
-
   const filteredPosts = useMemo(() => {
-    return posts.filter((post) => {
-      /* TYPE FILTER */
-      if (
-        type !== "all" &&
-        post.type?.toLowerCase() !== type
-      ) {
+    let result = posts.filter((post) => {
+      /* TYPE FILTER - Fixed to use correct field name */
+      if (types !== "all" && post.types?.toLowerCase() !== types) {
         return false;
       }
 
@@ -69,10 +66,7 @@ export default function Index() {
       }
 
       /* DATE FILTER */
-      if (
-        date &&
-        !post.created_at?.startsWith(date)
-      ) {
+      if (date && !post.created_at?.startsWith(date)) {
         return false;
       }
 
@@ -88,7 +82,16 @@ export default function Index() {
 
       return true;
     });
-  }, [posts, type, location, date, categories]);
+
+    /* SORT */
+    result.sort((a, b) => {
+      const dateA = new Date(a.created_at);
+      const dateB = new Date(b.created_at);
+      return sort === "newest" ? dateB - dateA : dateA - dateB;
+    });
+
+    return result;
+  }, [posts, types, location, date, categories, sort]);
 
   const toggleCategory = (cat) => {
     setCategories((prev) =>
@@ -98,13 +101,33 @@ export default function Index() {
     );
   };
 
-  /* ---------------- UI ---------------- */
+  const resetFilters = () => {
+    setTypes("all");
+    setLocation("");
+    setDate("");
+    setCategories([]);
+    setSort("newest");
+  };
 
+  /* ---------------- UI ---------------- */
   return (
-    <div className="flex flex-col md:flex-row">
+    <div className="flex flex-col md:flex-row font2">
       {/* FILTER SIDEBAR */}
-      <aside className="w-80 h-screen fixed bg-white border-r p-5 space-y-6">
-        <h2 className="text-2xl font-semibold">Filters</h2>
+      <aside className="w-80 h-screen fixed bg-white border-gray-300 border-r p-5 space-y-6 overflow-y-auto">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-semibold">Filters</h2>
+          <button
+            onClick={fetchPosts}
+            disabled={loading}
+            className="p-2 cursor-pointer rounded-lg hover:bg-gray-100 disabled:opacity-50"
+            title="Refresh posts"
+          >
+            <RefreshCw
+              size={20}
+              className={loading ? "animate-spin" : ""}
+            />
+          </button>
+        </div>
 
         {/* TYPE */}
         <div>
@@ -113,14 +136,14 @@ export default function Index() {
             {["all", "lost", "found"].map((t) => (
               <button
                 key={t}
-                onClick={() => setType(t)}
-                className={`flex-1 py-1.5 rounded-md text-sm ${
-                  type === t
-                    ? "bg-white shadow font-semibold"
+                onClick={() => setTypes(t)}
+                className={`flex-1 py-1.5 rounded-md text-sm capitalize ${
+                  types === t
+                    ? "bg-white cursor-pointer shadow font-semibold"
                     : "text-gray-500"
                 }`}
               >
-                {t.toUpperCase()}
+                {t === "all" ? "All" : t.charAt(0).toUpperCase() + t.slice(1)}
               </button>
             ))}
           </div>
@@ -160,7 +183,7 @@ export default function Index() {
             <p className="font-medium">Categories</p>
             <button
               onClick={() => setCategories(categoryOptions)}
-              className="text-xs text-blue-600 hover:underline"
+              className="text-xs text-blue-600 hover:underline cursor-pointer"
             >
               Select All
             </button>
@@ -177,33 +200,62 @@ export default function Index() {
                   checked={categories.includes(cat)}
                   onChange={() => toggleCategory(cat)}
                 />
-                {cat.toUpperCase()}
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
               </label>
             ))}
           </div>
         </div>
 
-        <button
-          onClick={() => {}}
-          className="w-full bg-blue-600 text-white py-3 rounded-md font-medium hover:bg-blue-700"
-        >
-          Apply Filters
-        </button>
+        {/* SORT */}
+        <div>
+          <p className="font-medium mb-2">Sort by</p>
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            {["newest", "oldest"].map((s) => (
+              <button
+                key={s}
+                onClick={() => setSort(s)}
+                className={`flex-1 py-1.5 rounded-md text-sm ${
+                  sort === s
+                    ? "bg-white shadow font-semibold cursor-pointer"
+                    : "text-gray-500"
+                }`}
+              >
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <button
+            onClick={resetFilters}
+            className="w-full cursor-pointer bg-gray-200 text-gray-800 py-3 rounded-md font-medium hover:bg-gray-300"
+          >
+            Clear All Filters
+          </button>
+
+          <button
+            onClick={() => {}}
+            className="w-full cursor-pointer bg-blue-600 text-white py-3 rounded-md font-medium hover:bg-blue-700"
+          >
+            Apply Filters
+          </button>
+        </div>
       </aside>
 
       {/* POSTS */}
-      <main className="ml-80 w-full p-6 flex flex-col items-center gap-4">
+      <main className="ml-80 w-full p-6 flex flex-col items-center gap-6">
         {loading ? (
-          <p className="text-gray-500 mt-10">Loading posts...</p>
+          <p className="text-gray-500 mt-20">Loading posts...</p>
         ) : error ? (
-          <p className="text-red-500 mt-10">{error}</p>
+          <p className="text-red-500 mt-20">{error}</p>
         ) : filteredPosts.length > 0 ? (
           filteredPosts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))
         ) : (
-          <p className="text-gray-500 mt-10">
-            No posts found matching filters.
+          <p className="text-gray-500 mt-20">
+            No posts found matching the selected filters.
           </p>
         )}
       </main>

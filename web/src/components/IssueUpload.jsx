@@ -1,38 +1,49 @@
 import React, { useState } from "react";
-import { X, Upload, XCircle, MapPin, Tag, Type, MessageSquare, Image as ImageIcon } from "lucide-react";
+import { X, Upload, MapPin, Tag, Image as ImageIcon } from "lucide-react";
 import { useUserData } from "../context/useUserData";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { uploadPost } from "../api/upload";
 
 export default function IssueUploadModal({ open, onClose }) {
   const userData = useUserData();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState(""); // lowercase: 'lost' or 'found'
+  const [type, setType] = useState("");
   const [place, setPlace] = useState("");
   const [area, setArea] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
   const [customTag, setCustomTag] = useState("");
   const [images, setImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Validation errors
   const [errors, setErrors] = useState({});
 
   const predefinedTags = [
-    "ELECTRONICS",
-    "CLOTHING",
-    "WALLET",
-    "BAG",
-    "PETS",
-    "KEYS",
-    "DOCUMENTS",
+    "Electronics",
+    "Clothing",
+    "Wallet",
+    "Bag",
+    "Pets",
+    "Keys",
+    "Documents",
+    "Jewelry",
   ];
 
   if (!open) return null;
 
-  // Handle image upload and max 5 check
+  /* ---------- Validation ---------- */
+  const validateForm = () => {
+    const e = {};
+    if (!title.trim()) e.title = "Title is required";
+    if (!description.trim()) e.description = "Description is required";
+    if (!type) e.type = "Please select a type";
+    if (!place.trim() && !area.trim())
+      e.location = "Please provide location information";
+
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  /* ---------- Images ---------- */
   const handleImages = (e) => {
     const files = Array.from(e.target.files);
     if (files.length + images.length > 5) {
@@ -42,52 +53,35 @@ export default function IssueUploadModal({ open, onClose }) {
     setImages((prev) => [...prev, ...files]);
   };
 
-  // Remove selected image
   const removeImage = (index) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Add predefined tag
-  const addPredefinedTag = (e) => {
-    const value = e.target.value;
-    if (value && !selectedTags.includes(value)) {
-      setSelectedTags((prev) => [...prev, value]);
-    }
-    e.target.value = "";
+  /* ---------- Tags ---------- */
+  const toggleTag = (tag) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag)
+        ? prev.filter((t) => t !== tag)
+        : [...prev, tag]
+    );
   };
 
-  // Add custom tag
   const addCustomTag = () => {
-    const tag = customTag.trim().toUpperCase();
+    const tag = customTag.trim();
     if (tag && !selectedTags.includes(tag)) {
       setSelectedTags((prev) => [...prev, tag]);
       setCustomTag("");
     }
   };
 
-  // Remove tag
-  const removeTag = (tagToRemove) => {
-    setSelectedTags((prev) => prev.filter((t) => t !== tagToRemove));
+  const removeTag = (tag) => {
+    setSelectedTags((prev) => prev.filter((t) => t !== tag));
   };
 
-  // Validate form, return true if valid
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!title.trim()) newErrors.title = "Title is required";
-    if (!type) newErrors.type = "Type is required";
-    if (!place.trim() && !area.trim()) {
-      newErrors.location = "Either Place or Area is required";
-    }
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Submit handler - FIXED VERSION
+  /* ---------- Submit ---------- */
   const submitIssue = async () => {
     if (!userData) {
-      alert("User not authenticated");
+      alert("Please login to create a post");
       return;
     }
 
@@ -96,74 +90,20 @@ export default function IssueUploadModal({ open, onClose }) {
     setIsSubmitting(true);
 
     try {
-      const formData = new FormData();
-
-      formData.append("title", title);
-      formData.append("description", description);
-      formData.append("types", type); // lowercase: 'lost' or 'found'
-      formData.append("place", place);
-      formData.append("area", area);
-      formData.append("tags", selectedTags.join(","));
-
-      formData.append("user_uid", userData.uid);
-      formData.append("user_email", userData.email);
-      formData.append("user_name", userData.name);
-      formData.append("user_photo", userData.photoURL || "");
-
-      images.forEach((img) => {
-        formData.append("images", img);
+      await uploadPost({
+        title,
+        description,
+        type,
+        place,
+        area,
+        tags: selectedTags,
+        images,
+        user: userData,
       });
 
-      console.log("Submitting form data...");
-
-      const res = await fetch(`${API_BASE_URL}/posts/create`, {
-        method: "POST",
-        body: formData,
-      });
-
-      // Check if response is OK (status 200-299)
-      if (!res.ok) {
-        let errorMessage = `HTTP error! status: ${res.status}`;
-        
-        // Try to get error details from response
-        try {
-          const errorData = await res.json();
-          console.error("Error response:", errorData);
-          
-          if (errorData.detail) {
-            if (Array.isArray(errorData.detail)) {
-              errorMessage = errorData.detail.map(err => err.msg).join(", ");
-            } else if (typeof errorData.detail === 'string') {
-              errorMessage = errorData.detail;
-            }
-          }
-        } catch (parseError) {
-          // If response is not JSON, try to get text
-          const text = await res.text();
-          errorMessage = text || errorMessage;
-        }
-        
-        throw new Error(errorMessage);
-      }
-
-      // Try to parse successful response
-      let responseData;
-      try {
-        responseData = await res.json();
-        console.log("Success response:", responseData);
-      } catch (jsonError) {
-        console.warn("Response is not JSON, but request was successful");
-        // If it's a 201 Created but no JSON, that's OK
-        if (res.status === 201) {
-          responseData = { success: true };
-        } else {
-          throw new Error("Invalid response format from server");
-        }
-      }
-
-      alert("Post submitted successfully!");
-
-      // Reset all form fields
+      alert("Post submitted successfully");
+      
+      // Reset and close
       setTitle("");
       setDescription("");
       setType("");
@@ -173,320 +113,265 @@ export default function IssueUploadModal({ open, onClose }) {
       setCustomTag("");
       setImages([]);
       setErrors({});
-
       onClose();
     } catch (err) {
-      console.error("Submit error:", err);
-      // Show user-friendly error message
-      const errorMsg = err.message.includes("'lost' or 'found'") 
-        ? "Please select either 'Lost' or 'Found'"
-        : err.message || "Something went wrong. Please try again.";
-      alert(`Error: ${errorMsg}`);
+      alert("Failed to submit post. Please try again.");
+      console.error(err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 font2">
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div className="fixed font2 inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-100">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">Create New Post</h2>
-            <p className="text-gray-500 text-sm mt-1">Share details about lost or found item</p>
-          </div>
+        <div className="flex items-center justify-between border-b p-4">
+          <h2 className="text-lg font-semibold text-gray-800">
+            Create New Post
+          </h2>
           <button
             onClick={onClose}
-            disabled={isSubmitting}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Close modal"
+            className="text-gray-500 hover:text-gray-700 p-1 rounded hover:bg-gray-100"
           >
-            <X size={24} className="text-gray-600" />
+            <X size={20} />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6 space-y-6">
-          {/* Title */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-gray-700 font-medium">
-              <Type size={18} />
-              Title *
-            </label>
-            <input
-              className={`w-full border-2 rounded-xl p-4 text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
-                errors.title ? "border-red-500" : "border-gray-200"
-              }`}
-              placeholder="e.g., Lost Black Wallet near Central Park"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              aria-invalid={errors.title ? "true" : "false"}
-              aria-describedby="title-error"
-            />
-            {errors.title && (
-              <p id="title-error" className="text-red-500 text-sm mt-1 ml-1">
-                {errors.title}
-              </p>
-            )}
-          </div>
-
+        {/* Form Content */}
+        <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
           {/* Type */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-gray-700 font-medium">
-              <MessageSquare size={18} />
-              Type *
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Type <span className="text-red-500">*</span>
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex space-x-3">
               <button
                 onClick={() => setType("lost")}
-                className={`rounded-xl p-4 border-2 transition-all ${
+                className={`flex-1 cursor-pointer py-2.5 px-4 border rounded-md transition-colors ${
                   type === "lost"
-                    ? "border-red-500 bg-red-50 text-red-700"
-                    : "border-gray-200 hover:border-red-300"
+                    ? "bg-red-50 border-red-500 text-red-700"
+                    : "border-gray-300 hover:bg-gray-50"
                 }`}
-                type="button"
               >
-                <div className="font-semibold">Lost</div>
-                <div className="text-sm text-gray-600">Something you lost</div>
+                Lost
               </button>
               <button
                 onClick={() => setType("found")}
-                className={`rounded-xl p-4 border-2 transition-all ${
+                className={`flex-1 cursor-pointer py-2.5 px-4 border rounded-md transition-colors ${
                   type === "found"
-                    ? "border-green-500 bg-green-50 text-green-700"
-                    : "border-gray-200 hover:border-green-300"
+                    ? "bg-green-50 border-green-500 text-green-700"
+                    : "border-gray-300 hover:bg-gray-50"
                 }`}
-                type="button"
               >
-                <div className="font-semibold">Found</div>
-                <div className="text-sm text-gray-600">Something you found</div>
+                Found
               </button>
             </div>
-            <select
-              className={`w-full border-2 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all mt-2 ${
-                errors.type ? "border-red-500" : "border-gray-200"
-              }`}
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              aria-invalid={errors.type ? "true" : "false"}
-              aria-describedby="type-error"
-            >
-              <option value="">Or select from dropdown</option>
-              <option value="lost">Lost</option>
-              <option value="found">Found</option>
-            </select>
             {errors.type && (
-              <p id="type-error" className="text-red-500 text-sm mt-1 ml-1">
-                {errors.type}
-              </p>
+              <p className="text-red-500 text-xs mt-1">{errors.type}</p>
             )}
           </div>
 
-          {/* Location */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-gray-700 font-medium">
-              <MapPin size={18} />
-              Location *
-              <span className="text-gray-400 text-sm font-normal">(at least one)</span>
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Title <span className="text-red-500">*</span>
             </label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <input
-                  className={`border-2 rounded-xl p-4 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
-                    errors.location && !place ? "border-red-500" : "border-gray-200"
-                  }`}
-                  placeholder="Specific place"
-                  value={place}
-                  onChange={(e) => setPlace(e.target.value)}
-                  aria-invalid={errors.location && !place ? "true" : "false"}
-                />
-                <div className="text-sm text-gray-500 ml-1">e.g., Starbucks, Library, etc.</div>
-              </div>
-              <div className="space-y-1">
-                <input
-                  className={`border-2 rounded-xl p-4 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
-                    errors.location && !area ? "border-red-500" : "border-gray-200"
-                  }`}
-                  placeholder="Area or region"
-                  value={area}
-                  onChange={(e) => setArea(e.target.value)}
-                  aria-invalid={errors.location && !area ? "true" : "false"}
-                />
-                <div className="text-sm text-gray-500 ml-1">e.g., Manhattan, Downtown</div>
-              </div>
-            </div>
-            {errors.location && (
-              <p id="location-error" className="text-red-500 text-sm mt-1 ml-1">
-                {errors.location}
-              </p>
-            )}
-          </div>
-
-          {/* Tags */}
-          <div className="space-y-4">
-            <label className="flex items-center gap-2 text-gray-700 font-medium">
-              <Tag size={18} />
-              Tags
-            </label>
-            
-            <div className="space-y-2">
-              <select
-                className="w-full border-2 border-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer"
-                onChange={addPredefinedTag}
-                aria-label="Select predefined tag"
-              >
-                <option value="">Select from common tags</option>
-                {predefinedTags.map((tag) => (
-                  <option key={tag} value={tag}>
-                    {tag.charAt(0) + tag.slice(1).toLowerCase()}
-                  </option>
-                ))}
-              </select>
-              
-              <div className="flex gap-3">
-                <input
-                  className="flex-1 border-2 border-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  placeholder="Create custom tag"
-                  value={customTag}
-                  onChange={(e) => setCustomTag(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && addCustomTag()}
-                  aria-label="Custom tag input"
-                />
-                <button
-                  onClick={addCustomTag}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-xl font-medium transition-colors shadow-sm"
-                  type="button"
-                  aria-label="Add custom tag"
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-
-            {selectedTags.length > 0 && (
-              <div className="space-y-2">
-                <div className="text-sm text-gray-600">Selected tags:</div>
-                <div className="flex flex-wrap gap-2" aria-live="polite">
-                  {selectedTags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full flex items-center gap-2 font-medium"
-                    >
-                      {tag}
-                      <button
-                        onClick={() => removeTag(tag)}
-                        className="hover:text-red-600 transition-colors"
-                        aria-label={`Remove tag ${tag}`}
-                        type="button"
-                      >
-                        <XCircle size={16} />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Brief description of the item"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            {errors.title && (
+              <p className="text-red-500 text-xs mt-1">{errors.title}</p>
             )}
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-gray-700 font-medium">
-              <MessageSquare size={18} />
-              Description
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description <span className="text-red-500">*</span>
             </label>
             <textarea
-              className="w-full border-2 border-gray-200 rounded-xl p-4 h-40 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
-              placeholder="Provide detailed description of the item, including brand, color, distinguishing features, when and where it was lost/found..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              placeholder="Provide additional details..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
-          {/* Images Upload */}
-          <div className="space-y-3">
-            <label className="flex items-center gap-2 text-gray-700 font-medium">
-              <ImageIcon size={18} />
-              Images
-              <span className="text-gray-400 text-sm font-normal">(max 5)</span>
+          {/* Location */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+              <MapPin size={16} />
+              Location <span className="text-red-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <input
+                  type="text"
+                  value={place}
+                  onChange={(e) => setPlace(e.target.value)}
+                  placeholder="Specific place"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  value={area}
+                  onChange={(e) => setArea(e.target.value)}
+                  placeholder="Area/City"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            {errors.location && (
+              <p className="text-red-500 text-xs mt-1">{errors.location}</p>
+            )}
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+              <Tag size={16} />
+              Tags
             </label>
             
-            <label className="block border-2 border-dashed border-gray-300 hover:border-blue-400 rounded-2xl p-8 text-center cursor-pointer transition-all hover:bg-blue-50">
-              <div className="space-y-3">
-                <div className="flex justify-center">
-                  <div className="p-3 bg-blue-100 rounded-full">
-                    <Upload className="text-blue-600" size={28} />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <div className="font-medium text-gray-800">Click to upload images</div>
-                  <div className="text-sm text-gray-500">JPEG, PNG or WebP (Max 5MB each)</div>
-                </div>
-              </div>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                hidden
-                onChange={handleImages}
-                aria-label="Upload images"
-              />
-            </label>
+            {/* Predefined Tags */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {predefinedTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  className={`px-3 cursor-pointer py-1 text-sm rounded-full border transition-colors ${
+                    selectedTags.includes(tag)
+                      ? "bg-blue-100 text-blue-700 border-blue-300"
+                      : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
 
-            {images.length > 0 && (
-              <div className="space-y-3">
-                <div className="text-sm text-gray-600">
-                  {images.length} image{images.length !== 1 ? 's' : ''} selected
-                </div>
-                <div className="grid grid-cols-5 gap-4">
-                  {images.map((img, i) => (
-                    <div key={i} className="relative group">
-                      <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-200">
-                        <img
-                          src={URL.createObjectURL(img)}
-                          className="h-full w-full object-cover group-hover:scale-105 transition-transform"
-                          alt={`Selected ${i + 1}`}
-                        />
-                      </div>
+            {/* Custom Tag */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customTag}
+                onChange={(e) => setCustomTag(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && addCustomTag()}
+                placeholder="Add custom tag"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <button
+                onClick={addCustomTag}
+                disabled={!customTag.trim()}
+                className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add
+              </button>
+            </div>
+
+            {/* Selected Tags */}
+            {selectedTags.length > 0 && (
+              <div className="mt-3">
+                <p className="text-sm text-gray-600 mb-2">Selected tags:</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedTags.map((tag) => (
+                    <div
+                      key={tag}
+                      className="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-md text-sm"
+                    >
+                      {tag}
                       <button
-                        onClick={() => removeImage(i)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-lg"
-                        aria-label={`Remove image ${i + 1}`}
-                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="text-blue-700 hover:text-red-600 ml-1"
                       >
-                        <XCircle size={20} />
+                        ×
                       </button>
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 text-center">
-                        {img.name.substring(0, 12)}...
-                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
           </div>
+
+          {/* Images */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+              <ImageIcon size={16} />
+              Images (Optional, max 5)
+            </label>
+            
+            {/* Upload Area */}
+            <label className="block cursor-pointer">
+              <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                <Upload className="mx-auto text-gray-400 mb-2" size={24} />
+                <p className="text-gray-600">Click to upload images</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  PNG, JPG up to 5MB each
+                </p>
+                {images.length > 0 && (
+                  <p className="text-xs text-gray-600 mt-2">
+                    {images.length} image(s) selected
+                  </p>
+                )}
+              </div>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleImages}
+                className="hidden"
+              />
+            </label>
+
+            {/* Image Previews */}
+            {images.length > 0 && (
+              <div className="mt-3 grid grid-cols-5 gap-2">
+                {images.map((img, i) => (
+                  <div key={i} className="relative">
+                    <img
+                      src={URL.createObjectURL(img)}
+                      alt={`Preview ${i + 1}`}
+                      className="w-full h-20 object-cover rounded border"
+                    />
+                    <button
+                      onClick={() => removeImage(i)}
+                      className="absolute cursor-pointer -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
-          <div className="flex gap-4">
+        {/* Footer Actions */}
+        <div className="border-t px-6 py-4 bg-gray-50">
+          <div className="flex justify-end gap-3">
             <button
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 border-2 border-gray-300 text-gray-700 rounded-xl py-4 font-medium hover:bg-gray-100 transition-colors"
-              type="button"
+              className="px-4 py-2 text-gray-700 cursor-pointer border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={submitIssue}
               disabled={isSubmitting}
-              className="flex-1 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl py-4 font-medium shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              type="button"
+              className="px-6 py-2 bg-blue-600 cursor-pointer text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   Submitting...
                 </>
               ) : (
@@ -494,9 +379,6 @@ export default function IssueUploadModal({ open, onClose }) {
               )}
             </button>
           </div>
-          <p className="text-center text-gray-500 text-sm mt-4">
-            Your post will be visible to the community once submitted
-          </p>
         </div>
       </div>
     </div>

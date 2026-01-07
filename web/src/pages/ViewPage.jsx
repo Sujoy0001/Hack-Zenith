@@ -158,12 +158,12 @@ export default function ViewPage() {
 
                   <span
                     className={`px-4 py-2 rounded-full font-semibold ${
-                      post.type === "found"
+                      post.types === "found"
                         ? "bg-emerald-100 text-emerald-800"
                         : "bg-rose-100 text-rose-800"
                     }`}
                   >
-                    {post.type.toUpperCase()}
+                    {post.types}
                   </span>
                 </div>
               </div>
@@ -193,7 +193,7 @@ export default function ViewPage() {
                           <img
                             src={img}
                             alt={`Post ${i + 1}`}
-                            className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                            className="w-full h-84 object-contain hover:scale-105 transition-transform duration-300"
                           />
                         </div>
                       ))}

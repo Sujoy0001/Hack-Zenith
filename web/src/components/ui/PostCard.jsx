@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Share2,
   MapPin,
@@ -15,7 +15,7 @@ export default function PostCard({ post }) {
   const {
     id,
     user,
-    type,
+    types,
     title,
     location,
     images = [],
@@ -35,7 +35,7 @@ export default function PostCard({ post }) {
     try {
       if (navigator.share) {
         await navigator.share({ 
-          title: `${title} - Lost & Found`, 
+          title: `${title} - lost & found`, 
           text: description?.substring(0, 100) + '...',
           url: shareUrl 
         });
@@ -100,6 +100,7 @@ export default function PostCard({ post }) {
             <div className="flex items-center text-sm text-gray-500">
               <MapPin size={14} className="mr-1.5" />
               <span className="truncate max-w-45">{location?.place || "Location not specified"}</span>
+              <span className="truncate ml-4 max-w-45">{location?.area || "Location not specified"}</span>
             </div>
           </div>
         </div>
@@ -113,12 +114,12 @@ export default function PostCard({ post }) {
           )}
           <span
             className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${
-              type === "LOST"
+              types === "lost"
                 ? "bg-red-50 text-red-600 border border-red-100"
                 : "bg-green-50 text-green-600 border border-green-100"
             }`}
           >
-            {type === "LOST" ? "Lost Item" : "Found Item"}
+            {types === "lost" ? "Lost Item" : "Found Item"}
           </span>
         </div>
       </header>
