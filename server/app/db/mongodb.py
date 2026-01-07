@@ -1,7 +1,21 @@
-from config import MONGO_URL
 from motor.motor_asyncio import AsyncIOMotorClient
+from config.mongo import MONGO_URL
 
-client = AsyncIOMotorClient(MONGO_URL)
-db = client.hackzenith
-user_collection = db.users
-exdate_collection = db.exdate
+# MONGO_URL = os.getenv("MONGO_URL")
+DATABASE_NAME = "hackzenith"
+
+if not MONGO_URL:
+    raise RuntimeError("MONGO_URL environment variable is not set")
+else:
+    print("MONGO_URL environment variable is set")
+
+
+client = AsyncIOMotorClient(
+    MONGO_URL,
+    serverSelectionTimeoutMS=5000,
+)
+
+db = client[DATABASE_NAME]
+
+users_collection = db["users"]
+posts_collection = db["posts"]

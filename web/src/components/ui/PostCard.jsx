@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
 import {
-  ThumbsUp,
   Share2,
   MapPin,
   Eye,
@@ -16,35 +15,27 @@ export default function PostCard({ post }) {
   const {
     id,
     user,
-    type,
+    types,
     title,
     location,
     images = [],
     tags = [],
-    upvotes = 0,
     created_at,
     is_solved,
     description,
     urgency
   } = post;
 
-  const [liked, setLiked] = useState(false);
-  const [voteCount, setVoteCount] = useState(upvotes);
   const navigate = useNavigate();
 
-  const handleLike = (e) => {
-    e.stopPropagation();
-    setLiked((prev) => !prev);
-    setVoteCount((prev) => (liked ? prev - 1 : prev + 1));
-  };
 
   const handleShare = async (e) => {
     e.stopPropagation();
-    const shareUrl = `${window.location.origin}/post/${id}`;
+    const shareUrl = `${window.location.origin}/index/post/${id}`;
     try {
       if (navigator.share) {
         await navigator.share({ 
-          title: `${title} - Lost & Found`, 
+          title: `${title} - lost & found`, 
           text: description?.substring(0, 100) + '...',
           url: shareUrl 
         });
@@ -74,7 +65,7 @@ export default function PostCard({ post }) {
 
   return (
     <article 
-      className="group w-full max-w-3xl bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 p-6 space-y-5 hover:border-gray-300 active:scale-[0.998]"
+      className="group w-full font2 max-w-3xl bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 p-6 space-y-5 hover:border-gray-300 active:scale-[0.998]"
     >
       
       {/* Header */}
@@ -109,6 +100,7 @@ export default function PostCard({ post }) {
             <div className="flex items-center text-sm text-gray-500">
               <MapPin size={14} className="mr-1.5" />
               <span className="truncate max-w-45">{location?.place || "Location not specified"}</span>
+              <span className="truncate ml-4 max-w-45">{location?.area || "Location not specified"}</span>
             </div>
           </div>
         </div>
@@ -122,12 +114,12 @@ export default function PostCard({ post }) {
           )}
           <span
             className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${
-              type === "lost"
+              types === "lost"
                 ? "bg-red-50 text-red-600 border border-red-100"
                 : "bg-green-50 text-green-600 border border-green-100"
             }`}
           >
-            {type === "lost" ? "Lost Item" : "Found Item"}
+            {types === "lost" ? "Lost Item" : "Found Item"}
           </span>
         </div>
       </header>
@@ -208,18 +200,6 @@ export default function PostCard({ post }) {
             <Clock size={16} />
             {formatTime(created_at)}
           </span>
-          
-          <button
-            onClick={handleLike}
-            className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-lg transition-all ${
-              liked
-                ? "bg-red-50 text-red-600 border border-red-100"
-                : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
-            }`}
-          >
-            <ThumbsUp size={18} className={liked ? "fill-red-600" : ""} />
-            <span className="font-medium">{voteCount}</span>
-          </button>
         </div>
 
         <div className="flex items-center gap-3">

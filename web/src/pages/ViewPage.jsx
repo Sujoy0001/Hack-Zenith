@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import reports from "../deta/Posts.json";
 import {
   MapPin,
   Clock,
@@ -9,25 +8,50 @@ import {
   Contact,
   ArrowLeft,
   Share2,
-  MessageCircle
+  MessageCircle,
 } from "lucide-react";
 import Button from "../components/ui/Button";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api"; // fallback for dev
 
 export default function ViewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const post = reports.find((p) => String(p.id) === id);
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-    });
-  }, []);
+    const fetchPost = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+
+        const response = await fetch(`${API_BASE_URL}/posts/${id}`);
+
+        if (!response.ok) {
+          throw new Error("Post not found");
+        }
+
+        const data = await response.json();
+        setPost(data);
+      } catch (err) {
+        console.error("Error fetching post:", err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPost();
+
+    window.scrollTo({ top: 0 });
+  }, [id]);
 
   const handleShare = async () => {
     const shareData = {
       title: post?.title,
-      text: post?.description.substring(0, 100) + "...",
+      text: post?.description?.substring(0, 100) + "...",
       url: window.location.href,
     };
 
@@ -39,31 +63,47 @@ export default function ViewPage() {
         console.log("Error sharing:", err);
       }
     } else {
-      // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        alert("Link copied to clipboard!");
-      }).catch(err => {
-        console.error("Failed to copy:", err);
-      });
+      navigator.clipboard
+        .writeText(window.location.href)
+        .then(() => {
+          alert("Link copied to clipboard!");
+        })
+        .catch((err) => {
+          console.error("Failed to copy:", err);
+        });
     }
   };
 
   const handleMessage = () => {
-    // Add your message logic here
     console.log("Message user:", post?.user?.name);
     // Example: window.open(`mailto:${post.user?.email}?subject=Regarding: ${post.title}`, '_blank');
   };
 
-  if (!post) {
+  // Loading State
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-50 px-4">
+        <div className="text-center bg-white p-10 rounded-2xl shadow-lg">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading post...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error / Not Found State
+  if (error || !post) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-50 px-4">
         <div className="text-center bg-white p-8 rounded-2xl shadow-lg max-w-md">
           <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-3">Post Not Found</h2>
-          <p className="text-gray-600 mb-6">The post you're looking for doesn't exist.</p>
-          <Button 
-            text="Go Back" 
-            variant="dark" 
+          <p className="text-gray-600 mb-6">
+            The post you're looking for doesn't exist or has been removed.
+          </p>
+          <Button
+            text="Go Back"
+            variant="dark"
             onClick={() => navigate(-1)}
             className="w-full"
           />
@@ -72,6 +112,7 @@ export default function ViewPage() {
     );
   }
 
+  // Main Render (unchanged UI)
   return (
     <div className="min-h-full font2">
       <div className="max-w-6xl mx-auto px-4 py-10">
@@ -99,7 +140,7 @@ export default function ViewPage() {
                     alt={post.user?.name}
                     className="w-16 h-16 rounded-full border-4 border-white shadow-lg"
                   />
-                  
+
                   <div className="flex-1">
                     <h2 className="text-xl font-bold text-gray-900">{post.user?.name}</h2>
                     <div className="flex items-center gap-3 mt-2">
@@ -114,13 +155,15 @@ export default function ViewPage() {
                       </span>
                     </div>
                   </div>
-                  
-                  <span className={`px-4 py-2 rounded-full font-semibold ${
-                    post.type === "found"
-                      ? "bg-emerald-100 text-emerald-800"
-                      : "bg-rose-100 text-rose-800"
-                  }`}>
-                    {post.type.toUpperCase()}
+
+                  <span
+                    className={`px-4 py-2 rounded-full font-semibold ${
+                      post.types === "found"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-rose-100 text-rose-800"
+                    }`}
+                  >
+                    {post.types}
                   </span>
                 </div>
               </div>
@@ -130,7 +173,7 @@ export default function ViewPage() {
                 <h1 className="text-3xl font-bold text-gray-900 mb-6 leading-tight">
                   {post.title}
                 </h1>
-                
+
                 <div className="mb-8">
                   <p className="text-gray-700 leading-relaxed text-lg whitespace-pre-line">
                     {post.description}
@@ -140,15 +183,17 @@ export default function ViewPage() {
                 {/* Images */}
                 {post.images?.length > 0 && (
                   <div className="mb-8">
-                    <div className={`grid gap-4 ${
-                      post.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
-                    }`}>
+                    <div
+                      className={`grid gap-4 ${
+                        post.images.length === 1 ? "grid-cols-1" : "grid-cols-2"
+                      }`}
+                    >
                       {post.images.map((img, i) => (
                         <div key={i} className="relative rounded-xl overflow-hidden shadow-lg">
                           <img
                             src={img}
                             alt={`Post ${i + 1}`}
-                            className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                            className="w-full h-84 object-contain hover:scale-105 transition-transform duration-300"
                           />
                         </div>
                       ))}
@@ -177,16 +222,20 @@ export default function ViewPage() {
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-6">
               {/* Status Card */}
-              <div className={`rounded-2xl shadow-xl overflow-hidden border ${
-                post.is_solved 
-                  ? 'bg-linear-to-br from-green-50 to-emerald-50 border-green-200' 
-                  : 'bg-linear-to-br from-yellow-50 to-amber-50 border-yellow-200'
-              }`}>
+              <div
+                className={`rounded-2xl shadow-xl overflow-hidden border ${
+                  post.is_solved
+                    ? "bg-linear-to-br from-green-50 to-emerald-50 border-green-200"
+                    : "bg-linear-to-br from-yellow-50 to-amber-50 border-yellow-200"
+                }`}
+              >
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-3 rounded-full ${
-                      post.is_solved ? 'bg-green-100' : 'bg-yellow-100'
-                    }`}>
+                    <div
+                      className={`p-3 rounded-full ${
+                        post.is_solved ? "bg-green-100" : "bg-yellow-100"
+                      }`}
+                    >
                       {post.is_solved ? (
                         <CheckCircle size={24} className="text-green-600" />
                       ) : (
@@ -195,13 +244,10 @@ export default function ViewPage() {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-gray-900">
-                        {post.is_solved ? 'Case Solved' : 'Case Active'}
+                        {post.is_solved ? "Case Solved" : "Case Active"}
                       </h3>
                       <p className="text-gray-600 text-sm">
-                        {post.is_solved 
-                          ? 'Resolved successfully' 
-                          : 'Needs attention'
-                        }
+                        {post.is_solved ? "Resolved successfully" : "Needs attention"}
                       </p>
                     </div>
                   </div>
@@ -214,19 +260,17 @@ export default function ViewPage() {
                   <h3 className="text-lg font-bold text-gray-900">Actions</h3>
                   <p className="text-gray-600 text-sm mt-1">What would you like to do?</p>
                 </div>
-                
+
                 <div className="p-6 space-y-4">
-                  {/* Message User Button */}
-                  <button 
+                  <button
                     onClick={handleMessage}
                     className="w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
                   >
                     <MessageCircle size={20} />
                     Message User
                   </button>
-                  
-                  {/* Share Button */}
-                  <button 
+
+                  <button
                     onClick={handleShare}
                     className="w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-white border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                   >
@@ -240,8 +284,8 @@ export default function ViewPage() {
               <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6">
                 <h4 className="font-semibold text-blue-800 mb-2">Need Help?</h4>
                 <p className="text-blue-600 text-sm">
-                  Use the "Message User" button to contact the reporter directly. 
-                  Share this post to help spread awareness.
+                  Use the "Message User" button to contact the reporter directly. Share this
+                  post to help spread awareness.
                 </p>
               </div>
             </div>

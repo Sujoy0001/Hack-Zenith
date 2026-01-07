@@ -1,10 +1,14 @@
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 class User(BaseModel):
-    id: int
+    uid: str
+    email: str
     name: str
-    email: EmailStr
-    is_active: bool = True     
-    is_verified: bool = False
-    created_at: str
-    updated_at: str
+    photoURL: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+
+class LocationModel(BaseModel):
+    place: str
+    area: str

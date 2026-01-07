@@ -1,15 +1,20 @@
-import React, { useMemo, useState } from "react";
-import posts from "../deta/Posts.json";
+import React, { useMemo, useState, useEffect } from "react";
 import PostCard from "../components/ui/PostCard";
-import { MapPin, Calendar } from "lucide-react";
+import { MapPin, Calendar, RefreshCw } from "lucide-react";
 
 export default function Index() {
-  const [type, setType] = useState("all");
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [types, setTypes] = useState("all");
   const [location, setLocation] = useState("");
   const [date, setDate] = useState("");
   const [categories, setCategories] = useState([]);
+  const [sort, setSort] = useState("newest");
 
-  // Categories derived from your JSON tags
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   const categoryOptions = [
     "electronics",
     "clothing",
@@ -18,36 +23,75 @@ export default function Index() {
     "pets",
     "keys",
     "documents",
-    "jewelry"
+    "jewelry",
   ];
 
-  const filteredPosts = useMemo(() => {
-    return posts.filter((post) => {
-      // Type filter
-      if (type !== "all" && post.type !== type) return false;
+  /* ---------------- FETCH POSTS ---------------- */
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(`${API_BASE_URL}/posts/get_all`);
+      if (!res.ok) throw new Error("Failed to fetch posts");
+      const data = await res.json();
+      setPosts(data);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch posts. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // Location filter
+  useEffect(() => {
+    fetchPosts();
+  }, [API_BASE_URL]);
+
+  /* ---------------- FILTER LOGIC ---------------- */
+  const filteredPosts = useMemo(() => {
+    let result = posts.filter((post) => {
+      /* TYPE FILTER - Fixed to use correct field name */
+      if (types !== "all" && post.types?.toLowerCase() !== types) {
+        return false;
+      }
+
+      /* LOCATION FILTER */
       if (
         location &&
         !post.location?.place
           ?.toLowerCase()
           .includes(location.toLowerCase())
-      )
+      ) {
         return false;
+      }
 
-      // Date filter
-      if (date && !post.created_at.startsWith(date)) return false;
+      /* DATE FILTER */
+      if (date && !post.created_at?.startsWith(date)) {
+        return false;
+      }
 
-      // Category filter (tags)
+      /* CATEGORY (TAGS) FILTER */
       if (
         categories.length > 0 &&
-        !categories.some((cat) => post.tags.includes(cat))
-      )
+        !categories.some((cat) =>
+          post.tags?.map((t) => t.toLowerCase()).includes(cat)
+        )
+      ) {
         return false;
+      }
 
       return true;
     });
-  }, [type, location, date, categories]);
+
+    /* SORT */
+    result.sort((a, b) => {
+      const dateA = new Date(a.created_at);
+      const dateB = new Date(b.created_at);
+      return sort === "newest" ? dateB - dateA : dateA - dateB;
+    });
+
+    return result;
+  }, [posts, types, location, date, categories, sort]);
 
   const toggleCategory = (cat) => {
     setCategories((prev) =>
@@ -57,71 +101,89 @@ export default function Index() {
     );
   };
 
-  return (
-    <div className="flex flex-col shrink-0 md:flex-row">
-     
-      {/* FILTER PANEL */}
-      <aside className="w-82 font2 h-screen fixed flex flex-col bg-white shrink-0 border-r border-gray-300 p-5 space-y-6">
-        <h2 className="font-semibold text-2xl">Filters</h2>
+  const resetFilters = () => {
+    setTypes("all");
+    setLocation("");
+    setDate("");
+    setCategories([]);
+    setSort("newest");
+  };
 
-        {/* Type */}
+  /* ---------------- UI ---------------- */
+  return (
+    <div className="flex flex-col md:flex-row font2">
+      {/* FILTER SIDEBAR */}
+      <aside className="w-80 h-screen fixed bg-white border-gray-300 border-r p-5 space-y-6 overflow-y-auto">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-semibold">Filters</h2>
+          <button
+            onClick={fetchPosts}
+            disabled={loading}
+            className="p-2 cursor-pointer rounded-lg hover:bg-gray-100 disabled:opacity-50"
+            title="Refresh posts"
+          >
+            <RefreshCw
+              size={20}
+              className={loading ? "animate-spin" : ""}
+            />
+          </button>
+        </div>
+
+        {/* TYPE */}
         <div>
-          <p className="text-md font-medium mb-2">Type</p>
+          <p className="font-medium mb-2">Type</p>
           <div className="flex bg-gray-100 rounded-lg p-1">
             {["all", "lost", "found"].map((t) => (
               <button
                 key={t}
-                onClick={() => setType(t)}
-                className={`flex-1 text-sm py-1.5 rounded-md cursor-pointer ${
-                  type === t
-                    ? "bg-white shadow font-semibold"
+                onClick={() => setTypes(t)}
+                className={`flex-1 py-1.5 rounded-md text-sm capitalize ${
+                  types === t
+                    ? "bg-white cursor-pointer shadow font-semibold"
                     : "text-gray-500"
                 }`}
               >
-                {t.toUpperCase()}
+                {t === "all" ? "All" : t.charAt(0).toUpperCase() + t.slice(1)}
               </button>
             ))}
           </div>
         </div>
 
-      
+        {/* LOCATION */}
         <div>
-          <p className="text-md font-medium mb-2">Location</p>
+          <p className="font-medium mb-2">Location</p>
           <div className="relative">
             <MapPin className="absolute left-3 top-2.5 text-gray-400" size={16} />
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="City or Place"
-              className="w-full pl-9 pr-3 py-2 rounded-lg border text-sm"
+              className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm"
             />
           </div>
         </div>
 
-        
+        {/* DATE */}
         <div>
-          <p className="text-md font-medium mb-2">Date Posted</p>
+          <p className="font-medium mb-2">Date Posted</p>
           <div className="relative">
-            <Calendar
-              className="absolute left-3 top-2.5 text-gray-400"
-              size={16}
-            />
+            <Calendar className="absolute left-3 top-2.5 text-gray-400" size={16} />
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-lg border text-sm"
+              className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm"
             />
           </div>
         </div>
 
-        
+        {/* CATEGORIES */}
         <div>
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-md font-medium">Categories</p>
+          <div className="flex justify-between mb-2">
+            <p className="font-medium">Categories</p>
             <button
               onClick={() => setCategories(categoryOptions)}
-              className="text-xs text-blue-600 cursor-pointer hover:underline"
+              className="text-xs text-blue-600 hover:underline cursor-pointer"
             >
               Select All
             </button>
@@ -138,29 +200,62 @@ export default function Index() {
                   checked={categories.includes(cat)}
                   onChange={() => toggleCategory(cat)}
                 />
-                {cat.replace("-", " ").toUpperCase()}
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
               </label>
             ))}
           </div>
         </div>
 
-        <button
-          onClick={() => {}}
-          className="w-full mt-4 bg-blue-600 text-white py-3 rounded-md font-medium cursor-pointer hover:bg-blue-700"
-        >
-          Apply Filters
-        </button>
+        {/* SORT */}
+        <div>
+          <p className="font-medium mb-2">Sort by</p>
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            {["newest", "oldest"].map((s) => (
+              <button
+                key={s}
+                onClick={() => setSort(s)}
+                className={`flex-1 py-1.5 rounded-md text-sm ${
+                  sort === s
+                    ? "bg-white shadow font-semibold cursor-pointer"
+                    : "text-gray-500"
+                }`}
+              >
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <button
+            onClick={resetFilters}
+            className="w-full cursor-pointer bg-gray-200 text-gray-800 py-3 rounded-md font-medium hover:bg-gray-300"
+          >
+            Clear All Filters
+          </button>
+
+          <button
+            onClick={() => {}}
+            className="w-full cursor-pointer bg-blue-600 text-white py-3 rounded-md font-medium hover:bg-blue-700"
+          >
+            Apply Filters
+          </button>
+        </div>
       </aside>
 
-
-      <main className="flex flex-col font2 w-full ml-80 space-y-4 overflow-y-auto justify-center items-center mx-auto p-6 mb-20">
-        {filteredPosts.length > 0 ? (
+      {/* POSTS */}
+      <main className="ml-80 w-full p-6 flex flex-col items-center gap-6">
+        {loading ? (
+          <p className="text-gray-500 mt-20">Loading posts...</p>
+        ) : error ? (
+          <p className="text-red-500 mt-20">{error}</p>
+        ) : filteredPosts.length > 0 ? (
           filteredPosts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))
         ) : (
-          <p className="text-center text-gray-500 mt-10">
-            No posts found matching filters.
+          <p className="text-gray-500 mt-20">
+            No posts found matching the selected filters.
           </p>
         )}
       </main>
