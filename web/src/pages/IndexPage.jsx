@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import PostCard from "../components/ui/PostCard";
 import { MapPin, Calendar, RefreshCw } from "lucide-react";
+import { connectBackend } from "../api/connect";
 
 export default function Index() {
   const [posts, setPosts] = useState([]);
@@ -14,6 +15,8 @@ export default function Index() {
   const [sort, setSort] = useState("newest");
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  connectBackend();
 
   const categoryOptions = [
     "electronics",

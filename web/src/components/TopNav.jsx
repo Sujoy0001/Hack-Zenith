@@ -1,48 +1,75 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Bell, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import BadgeIcon from "./ui/BadgeIcon";
 import Profile from "./Profile";
+import NotificationPopup from "./NotificationPopup";
+import useWSNotifications from "../hooks/useWSNotifications";
+import { userID } from "../api/connect";
 
 export default function TopNav() {
-  const [notifications, setNotifications] = useState(0);
-  const [messages, setMessages] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const userId = userID();
 
-  useEffect(() => {
-    const fetchCounts = async () => {
-      try {
-        const res = await fetch("http://127.0.0.1:8000/get/notifications", {
-          credentials: "include",
-        });
-        const data = await res.json();
+  console.log("Current userId:", userId);
 
-        setNotifications(data.notifications ?? 0);
-        setMessages(data.messages ?? 0);
-      } catch (error) {
-        console.error("Failed to load topnav counts", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const notifications = useWSNotifications(userId);
 
-    fetchCounts();
-  }, []);
+  console.log("Notifications received:", notifications);
+
+  const [open, setOpen] = useState(false);
+  const [localNotifications, setLocalNotifications] = useState([]);
+
+  // Sync localNotifications with notifications from WS
+  React.useEffect(() => {
+    setLocalNotifications(notifications);
+  }, [notifications]);
+
+  const unreadCount = open ? 0 : localNotifications.length;
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     window.location.href = "/login";
   };
 
-  return (
-    <div className="w-full h-16 sticky top-0 z-20 bg-white border-b border-gray-200 flex items-center justify-end px-4">
-      <div className="h-full px-6 flex items-center justify-end gap-4">
-        <Link to="/index/notifications">
-          <BadgeIcon icon={Bell} count={loading ? null : notifications} />
-        </Link>
+  
+  const handleMarkAllRead = () => {
+    console.log("Mark all read clicked");
+    setLocalNotifications([]);
+  };
 
+  // Clear all notifications locally
+  const handleClearAll = () => {
+    setLocalNotifications([]);
+  };
+
+  // Delete single notification by id (or index fallback)
+  const handleDelete = (id) => {
+    setLocalNotifications((prev) => prev.filter((n) => (n.id || n) !== id));
+  };
+
+  return (
+    <div className="w-full h-18 sticky top-0 z-20 bg-white border-b border-gray-200 flex items-center justify-end px-4">
+      <div className="h-full px-6 flex items-center justify-end gap-4">
+        <div
+          className="cursor-pointer"
+          onClick={() => setOpen((prev) => !prev)}
+        >
+          <BadgeIcon icon={Bell} count={unreadCount} />
+        </div>
+
+        {/* Notification Popup */}
+        <NotificationPopup
+          open={open}
+          notifications={localNotifications}
+          onClose={() => setOpen(false)}
+          onMarkAllRead={handleMarkAllRead}
+          onClearAll={handleClearAll}
+          onDelete={handleDelete}
+        />
+
+        {/* Messages */}
         <Link to="/index/messages">
-          <BadgeIcon icon={MessageCircle} count={loading ? null : messages} />
+          <BadgeIcon icon={MessageCircle} count={0} />
         </Link>
 
         <Profile
