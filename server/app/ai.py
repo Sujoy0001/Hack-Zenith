@@ -1,15 +1,12 @@
 from db.mongodb import lost_collection, found_collection, matches_collection
 import aiohttp
 from bson import ObjectId
-# from config.gemini import GEMINI_API_URL
+from config.gemini import GEMINI_API_URL
 import google.generativeai as genai
 import json
 import re
 
 BATCH_SIZE = 5
-
-GEMINI_API_URL = "AIzaSyBRxPhIpG6O2_5F4CfnvnppvRjPTZCH9m0"
-
 
 # -----------------------------
 # Safety check for Gemini URL
