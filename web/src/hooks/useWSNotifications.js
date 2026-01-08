@@ -14,20 +14,25 @@ export default function useWSNotifications(userId) {
     };
 
     ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+      try {
+        const data = JSON.parse(event.data);
 
-      if (data.type !== "notification") return;
+        // ✅ Accept ALL notification types
+        if (!data || !data.title || !data.message) return;
 
-      // 🔒 Deduplication
-      if (data.id && idsRef.current.has(data.id)) return;
+        // 🔒 Deduplication
+        if (data.id && idsRef.current.has(data.id)) return;
 
-      if (data.id) idsRef.current.add(data.id);
+        if (data.id) idsRef.current.add(data.id);
 
-      setNotifications((prev) => [data, ...prev]);
+        setNotifications((prev) => [data, ...prev]);
+      } catch (err) {
+        console.error("WS message parse error:", err);
+      }
     };
 
     ws.onerror = (err) => {
-      console.error("WS error", err);
+      console.error("WS error:", err);
     };
 
     ws.onclose = () => {

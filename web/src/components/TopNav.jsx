@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Bell, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import BadgeIcon from "./ui/BadgeIcon";
@@ -10,46 +10,70 @@ import { userID } from "../api/connect";
 export default function TopNav() {
   const userId = userID();
 
-  console.log("Current userId:", userId);
-
-  const notifications = useWSNotifications(userId);
-
-  console.log("Notifications received:", notifications);
+  // Always normalize to array
+  const wsNotifications = useWSNotifications(userId) || [];
+  console.log("WS Notifications:", wsNotifications);
 
   const [open, setOpen] = useState(false);
   const [localNotifications, setLocalNotifications] = useState([]);
 
-  // Sync localNotifications with notifications from WS
-  React.useEffect(() => {
-    setLocalNotifications(notifications);
-  }, [notifications]);
+  /**
+   * Merge incoming WS notifications safely
+   * - Normalize IDs
+   * - Prevent duplicates
+   * - Preserve read state
+   */
+  const mergeNotifications = useCallback((incoming) => {
+    setLocalNotifications((prev) => {
+      const existingIds = new Set(prev.map((n) => n.id));
 
-  const unreadCount = open ? 0 : localNotifications.length;
+      const normalized = incoming
+        .filter(Boolean)
+        .map((n) => ({
+          ...n,
+          id: n.id || crypto.randomUUID(),
+          read: n.read ?? false,
+        }))
+        .filter((n) => !existingIds.has(n.id));
+
+      return normalized.length ? [...normalized, ...prev] : prev;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!Array.isArray(wsNotifications) || wsNotifications.length === 0) return;
+    mergeNotifications(wsNotifications);
+  }, [wsNotifications, mergeNotifications]);
+
+  const unreadCount = localNotifications.filter(n => !n.read).length;
 
   const handleLogout = () => {
+    setOpen(false);
     localStorage.removeItem("token");
     window.location.href = "/login";
   };
 
-  
   const handleMarkAllRead = () => {
-    console.log("Mark all read clicked");
-    setLocalNotifications([]);
+    setLocalNotifications((prev) =>
+      prev.map((n) => ({ ...n, read: true }))
+    );
   };
 
-  // Clear all notifications locally
   const handleClearAll = () => {
     setLocalNotifications([]);
   };
 
-  // Delete single notification by id (or index fallback)
   const handleDelete = (id) => {
-    setLocalNotifications((prev) => prev.filter((n) => (n.id || n) !== id));
+    setLocalNotifications((prev) =>
+      prev.filter((n) => n.id !== id)
+    );
   };
 
   return (
     <div className="w-full h-18 sticky top-0 z-20 bg-white border-b border-gray-200 flex items-center justify-end px-4">
-      <div className="h-full px-6 flex items-center justify-end gap-4">
+      <div className="h-full px-6 flex items-center gap-4">
+
+        {/* Notifications */}
         <div
           className="cursor-pointer"
           onClick={() => setOpen((prev) => !prev)}
@@ -57,7 +81,6 @@ export default function TopNav() {
           <BadgeIcon icon={Bell} count={unreadCount} />
         </div>
 
-        {/* Notification Popup */}
         <NotificationPopup
           open={open}
           notifications={localNotifications}
@@ -72,6 +95,7 @@ export default function TopNav() {
           <BadgeIcon icon={MessageCircle} count={0} />
         </Link>
 
+        {/* Profile */}
         <Profile
           username="Sujoy Garai"
           email="sujoygarai89@gmail.com"

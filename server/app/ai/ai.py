@@ -5,8 +5,37 @@ from config.gemini import GEMINI_API_URL
 import google.generativeai as genai
 import json
 import re
+from cure import ws_manager
+from datetime import datetime
+from db.mongodb import notifications_collection
+from router.ws import WebSocketDisconnect
+
 
 BATCH_SIZE = 5
+
+async def send(self, user_id: str, payload: dict):
+    # STORE IN DB (RELIABILITY)
+    await notifications_collection.insert_one({
+        "user_id": user_id,
+        "title": payload["title"],
+        "message": payload["message"],
+        "type": payload.get("type", "notification"),
+        "post_link": payload.get("post_link"),  # ✅ NEW
+        "read": False,
+        "created_at": datetime.utcnow(),
+    })
+
+    # PUSH IF USER IS ONLINE
+    ws = self.active.get(user_id)
+    if ws:
+        try:
+            await ws.send_json(payload)
+        except WebSocketDisconnect:
+            self.disconnect(user_id)
+        except Exception as e:
+            print(f"Unexpected error sending to user {user_id}: {e}")
+            self.disconnect(user_id)
+
 
 # -----------------------------
 # Safety check for Gemini URL
@@ -132,6 +161,38 @@ async def match_lost_found():
                 "lost_post_id": payload["lost_post"]["_id"],
                 "matches": gemini_result["matches"]
             })
+
+            async def send(user_id: str, payload: dict):
+                # STORE IN DB (RELIABILITY)
+                await notifications_collection.insert_one({
+                    "user_id": user_id,
+                    "title": payload["title"],
+                    "message": payload["message"],
+                    "type": payload.get("type", "notification"),
+                    "post_link": payload.get("post_link"),  # ✅ NEW
+                    "read": False,
+                    "created_at": datetime.utcnow(),
+                })
+
+                # PUSH IF USER IS ONLINE
+                ws = ws_manager.active.get(user_id)
+                if ws:
+                    try:
+                        await ws.send_json(payload)
+                    except WebSocketDisconnect:
+                        ws_manager.disconnect(user_id)
+                    except Exception as e:
+                        print(f"Unexpected error sending to user {user_id}: {e}")
+                        ws_manager.disconnect(user_id)
+
+            for match in gemini_result["matches"]:
+                user_id = match["user_email"]
+                message = f"Found a match for your lost post: {lost_post['title']}"
+                await send(user_id, {
+                    "title": "Match Found!",
+                    "message": message,
+                    "post_link": f"/found/{match['found_post_id']}"
+                })
 
         else:
             print(f"No matches found for lost post {lost_id}")
