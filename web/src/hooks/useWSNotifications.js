@@ -4,10 +4,13 @@ export default function useWSNotifications(userId) {
   const [notifications, setNotifications] = useState([]);
   const idsRef = useRef(new Set());
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+
   useEffect(() => {
     if (!userId) return;
 
-    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/${userId}`);
+    const ws = new WebSocket(`ws://${API_BASE_URL}/ws/${userId}`);
 
     ws.onopen = () => {
       console.log("WS connected:", userId);
