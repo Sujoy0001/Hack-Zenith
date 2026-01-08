@@ -1,15 +1,14 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Home, AlertTriangle, ListChecks, User, Settings, PlusCircle, GoalIcon, Upload } from "lucide-react";
+import { Home, AlertTriangle, ListChecks, User, Settings, MessageSquare, GoalIcon, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "./ui/Button";
-import { useIssueModal } from "../context/IssueModalContext";
 import IssueUploadModal from "./IssueUpload";
 
 const NAV_ITEMS = [
   { name: "Home", path: "/index", icon: Home, end: true },
   { name: "My Report", path: "/index/report", icon: AlertTriangle },
-  { name: "All Issues", path: "/index/all-issues", icon: ListChecks },
+  { name: "Messages", path: "/index/messages", icon: MessageSquare },
   { name: "Profile", path: "/index/profile", icon: User },
   { name: "Settings", path: "/index/settings", icon: Settings },
 ];

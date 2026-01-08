@@ -16,6 +16,7 @@ import ProfilePage from './pages/ProfilePage';
 import { IssueModalProvider } from './context/IssueModalContext';
 import NotificationsPage from './pages/NotificationsPage';
 import { AuthProvider } from "./context/AuthContext";
+import InboxPage from './pages/InboxPage';
 
 const router = createBrowserRouter([
   {
@@ -37,6 +38,7 @@ const router = createBrowserRouter([
       { path: "/index/post/:id", element: <ViewPage />},
       { path: "/index/profile", element: <ProfilePage />},
       { path: "/index/notifications", element: <NotificationsPage />},
+      { path: "/index/messages", element: <InboxPage />},
       { path: "*", element: <NotFound />}
     ]
   }

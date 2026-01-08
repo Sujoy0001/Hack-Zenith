@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Send } from "lucide-react";
+import { X, Send, Phone } from "lucide-react";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api";
 
 export default function Chat({ open, onClose, post, sender }) {
   const [message, setMessage] = useState("");
@@ -28,6 +28,7 @@ export default function Chat({ open, onClose, post, sender }) {
           uid: sender.uid,
           name: sender.name,
           email: sender.email,
+          phone: sender.phone,
         },
         receiver: {
           uid: post.user.uid,
