@@ -11,15 +11,21 @@ import {
   MessageCircle,
 } from "lucide-react";
 import Button from "../components/ui/Button";
+import Chat from "../components/Chat";
+import { useUserData } from "../context/useUserData";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api"; // fallback for dev
 
 export default function ViewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+
+  const sender = useUserData();
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -75,15 +81,19 @@ export default function ViewPage() {
   };
 
   const handleMessage = () => {
-    console.log("Message user:", post?.user?.name);
-    // Example: window.open(`mailto:${post.user?.email}?subject=Regarding: ${post.title}`, '_blank');
+    if (sender?.uid === post?.user?.uid) {
+      alert("You cannot message yourself.");
+      return;
+    }
+
+    setChatOpen(true);
   };
 
   // Loading State
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-50 px-4">
-        <div className="text-center bg-white p-10 rounded-2xl shadow-lg">
+      <div className="min-h-screen font2 flex items-center justify-center px-4">
+        <div className="text-center p-10">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading post...</p>
         </div>
@@ -94,8 +104,8 @@ export default function ViewPage() {
   // Error / Not Found State
   if (error || !post) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-50 px-4">
-        <div className="text-center bg-white p-8 rounded-2xl shadow-lg max-w-md">
+      <div className="min-h-screen flex items-center justify-center font2">
+        <div className="text-center bg-white p-8 rounded-2xl max-w-md">
           <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-3">Post Not Found</h2>
           <p className="text-gray-600 mb-6">
@@ -264,15 +274,16 @@ export default function ViewPage() {
                 <div className="p-6 space-y-4">
                   <button
                     onClick={handleMessage}
-                    className="w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+                    className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3.5 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
                   >
                     <MessageCircle size={20} />
                     Message User
                   </button>
 
+
                   <button
                     onClick={handleShare}
-                    className="w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-white border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+                    className="w-full cursor-pointer flex items-center justify-center gap-3 px-4 py-3.5 bg-white border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                   >
                     <Share2 size={20} />
                     Share Post
@@ -292,6 +303,12 @@ export default function ViewPage() {
           </div>
         </div>
       </div>
+      <Chat
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        post={post}
+        sender={sender}
+      />
     </div>
   );
 }
