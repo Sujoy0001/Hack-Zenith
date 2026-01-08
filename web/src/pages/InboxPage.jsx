@@ -5,8 +5,6 @@ import { Mail, Phone, Inbox, Search, Clock, User, MessageSquare, Eye } from "luc
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
-const API_BASE_URL2 = import.meta.env.VITE_API_BASE_URL2;
-
 export default function InboxPage() {
   const user = useUserData();
 
@@ -98,7 +96,7 @@ export default function InboxPage() {
     if (!user?.uid) return;
 
     console.log("Connecting WebSocket for user:", user.uid);
-    const ws = new WebSocket(`ws://${API_BASE_URL2}/messages/ws/${user.uid}`);
+    const ws = new WebSocket(`wss://${API_BASE_URL}/messages/ws/${user.uid}`);
     wsRef.current = ws;
 
     ws.onopen = () => {
