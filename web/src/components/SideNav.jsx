@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Home, AlertTriangle, ListChecks, User, Settings, MessageSquare, GoalIcon, Upload } from "lucide-react";
+import { Home, AlertTriangle, Download, User, Settings, MessageSquare, GoalIcon, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "./ui/Button";
 import IssueUploadModal from "./IssueUpload";
@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { name: "My Report", path: "/index/report", icon: AlertTriangle },
   { name: "Messages", path: "/index/messages", icon: MessageSquare },
   { name: "Profile", path: "/index/profile", icon: User },
-  { name: "Settings", path: "/index/settings", icon: Settings },
+  { name: "Download", path: "/index/download", icon: Download },
 ];
 
 export default function SideNav() {

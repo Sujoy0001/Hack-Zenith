@@ -50,11 +50,11 @@ async def create_post(
 
     if images:
         if len(images) > MAX_IMAGES:
-            raise HTTPException(400, "Maximum 5 images allowed")
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Maximum 5 images allowed")
 
         for img in images:
             if img.content_type not in ALLOWED_TYPES:
-                raise HTTPException(400, "Invalid image type")
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid image type")
 
             image_urls.append(upload_to_cloudinary(img))
 
@@ -78,13 +78,23 @@ async def create_post(
         "is_solved": False,
     }
 
+    # Insert post
     result = await posts_collection.insert_one(post_doc)
+    inserted_id = str(result.inserted_id)
 
+    # ✅ Add readable `id` field
+    await posts_collection.update_one(
+        {"_id": result.inserted_id},
+        {"$set": {"id": inserted_id}}
+    )
+
+    # Re-run matcher / breaker
     await break_posts_collection()
 
     # 🔐 SAFE RESPONSE
     return {
-        "_id": str(result.inserted_id),
+        "_id": inserted_id,
+        "id": inserted_id,
         "created_at": post_doc["created_at"].isoformat(),
     }
 
@@ -193,4 +203,25 @@ async def search_posts(
             "is_solved": post["is_solved"],
         })
         
+    return posts
+
+@router.get("/user/{user_uid}", response_model=None)
+async def get_user_posts(user_uid: str):
+    cursor = posts_collection.find(
+        {"user.uid": user_uid}
+    ).sort("created_at", -1)
+
+    posts = []
+
+    async for post in cursor:
+        post["_id"] = str(post["_id"])
+        post["created_at"] = post["created_at"].isoformat()
+        posts.append(post)
+
+    if not posts:
+        raise HTTPException(
+            status_code=404,
+            detail="No posts found for this user"
+        )
+   
     return posts
