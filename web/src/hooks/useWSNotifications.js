@@ -4,7 +4,7 @@ export default function useWSNotifications(userId) {
   const [notifications, setNotifications] = useState([]);
   const idsRef = useRef(new Set());
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL2;
 
 
   useEffect(() => {
