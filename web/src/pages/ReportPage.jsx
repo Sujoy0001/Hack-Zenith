@@ -13,6 +13,7 @@ import {
   FiMessageSquare
 } from "react-icons/fi";
 import { format } from "date-fns";
+import { useUserData } from "../context/useUserData";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
@@ -23,6 +24,9 @@ export default function RepostPage() {
   const [actionLoading, setActionLoading] = useState({});
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  
+  const user = useUserData();
+  const userId = user?.uid;
 
   // Extract unique post types for filter
   const postTypes = ["all", ...new Set(posts.map(post => post.types))];
@@ -32,7 +36,7 @@ export default function RepostPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`${API_BASE_URL}/posts/get_all`);
+      const res = await axios.get(`${API_BASE_URL}/posts/user/${userId}`);
       setPosts(res.data);
     } catch (err) {
       setError("Failed to load posts. Please try again.");
@@ -94,7 +98,7 @@ export default function RepostPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex font2 items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading posts...</p>
@@ -105,7 +109,7 @@ export default function RepostPage() {
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6 font2">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <FiAlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-red-800 mb-2">Error Loading Posts</h2>

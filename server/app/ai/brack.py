@@ -5,47 +5,65 @@ import asyncio
 BATCH_SIZE = 50
 is_running = False
 
+async def insert_without_duplicates(collection, documents):
+    ids = [doc["id"] for doc in documents]
+
+    existing = await collection.find(
+        {"id": {"$in": ids}},
+        {"id": 1}
+    ).to_list(length=None)
+
+    existing_ids = {doc["id"] for doc in existing}
+
+    new_docs = [doc for doc in documents if doc["id"] not in existing_ids]
+
+    if new_docs:
+        await collection.insert_many(new_docs, ordered=False)
+
 
 async def break_posts_collection():
     """
-    Process posts and separate them into lost and found collections.
+    Process posts and separate them into lost and found collections
+    without inserting duplicates.
     """
-    lost_to_insert = []
-    found_to_insert = []
+
+    lost_batch = []
+    found_batch = []
 
     async for post in posts_collection.find({}):
         post_type = post.get("types", "").lower()
 
         post_data = post.copy()
-        post_data.pop("_id", None)
         post_data.pop("created_at", None)
         post_data.pop("images", None)
-        post_data.get("user", {}).pop("avatar", None)
+
+        if isinstance(post_data.get("user"), dict):
+            post_data["user"].pop("avatar", None)
 
         if post_type == "lost":
-            lost_to_insert.append(post_data)
+            lost_batch.append(post_data)
+
         elif post_type == "found":
-            found_to_insert.append(post_data)
+            found_batch.append(post_data)
 
-        if len(lost_to_insert) >= BATCH_SIZE:
-            if post in lost_collection.find({}):
-                continue
-            await lost_collection.insert_many(lost_to_insert, ordered=False)
-            lost_to_insert.clear()
+        if len(lost_batch) >= BATCH_SIZE:
+            await insert_without_duplicates(lost_collection, lost_batch)
+            lost_batch.clear()
 
-        if len(found_to_insert) >= BATCH_SIZE:
-            if post in found_collection.find({}):
-                continue
-            await found_collection.insert_many(found_to_insert, ordered=False)
-            found_to_insert.clear()
+        if len(found_batch) >= BATCH_SIZE:
+            await insert_without_duplicates(found_collection, found_batch)
+            found_batch.clear()
 
-    if lost_to_insert:
-        await lost_collection.insert_many(lost_to_insert, ordered=False)
+    if lost_batch:
+        await insert_without_duplicates(lost_collection, lost_batch)
 
-    if found_to_insert:
-        await found_collection.insert_many(found_to_insert, ordered=False)
+    if found_batch:
+        await insert_without_duplicates(found_collection, found_batch)
 
-    return {"status": "success", "message": "Batch processing completed"}
+    return {
+        "status": "success",
+        "message": "Batch processing completed without duplicates"
+    }
 
 
 async def monitor_found_collection():

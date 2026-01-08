@@ -1,7 +1,7 @@
 aiohappyeyeballs==2.6.1
 aiohttp==3.13.3
 aiosignal==1.4.0
-aiosmtplib==4.0.2
+aiosmtplib==5.0.0
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.9.0
@@ -10,19 +10,20 @@ asgiref==3.8.1
 attrs==24.3.0
 bcrypt==4.0.1
 binaryornot==0.4.4
+blinker==1.9.0
 boto3==1.35.71
 botocore==1.35.71
 CacheControl==0.14.4
 cachetools==6.2.4
 certifi==2024.12.14
-cffi==1.17.1
+cffi==2.0.0
 chardet==5.2.0
 charset-normalizer==3.4.1
 click==8.1.7
 cloudinary==1.44.1
 colorama==0.4.6
 cookiecutter==2.6.0
-cryptography==44.0.0
+cryptography==46.0.3
 distlib==0.3.9
 distro==1.9.0
 Django==5.1.4
@@ -30,10 +31,11 @@ django-tailwind==3.8.0
 dnspython==2.7.0
 dotenv==0.9.9
 ecdsa==0.19.1
-email_validator==2.2.0
+email-validator==2.3.0
 Faker==33.1.0
 fastapi==0.116.0
 fastapi-cli==0.0.7
+fastapi-mail==1.6.1
 filelock==3.16.1
 firebase_admin==7.1.0
 frozenlist==1.8.0
@@ -67,7 +69,7 @@ itsdangerous==2.2.0
 jaraco.classes==3.4.0
 jaraco.context==6.0.1
 jaraco.functools==4.1.0
-Jinja2==3.1.5
+Jinja2==3.1.6
 jiter==0.10.0
 jmespath==1.0.1
 keyring==25.5.0
@@ -92,10 +94,10 @@ protobuf==5.29.5
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
 pycparser==2.22
-pydantic==2.11.5
+pydantic==2.12.5
 pydantic-extra-types==2.10.5
 pydantic-settings==2.9.1
-pydantic_core==2.33.2
+pydantic_core==2.41.5
 Pygments==2.19.1
 PyJWT==2.10.1
 pymongo==4.13.2
@@ -108,6 +110,7 @@ python-multipart==0.0.20
 python-slugify==8.0.4
 # pywin32-ctypes==0.2.3
 PyYAML==6.0.2
+regex==2025.11.3
 reportlab==4.4.3
 requests==2.32.3
 rich==13.9.4
@@ -131,8 +134,8 @@ trio==0.27.0
 trio-websocket==0.11.1
 typer==0.16.0
 types-python-dateutil==2.9.0.20241206
-typing-inspection==0.4.1
-typing_extensions==4.12.2
+typing-inspection==0.4.2
+typing_extensions==4.15.0
 tzdata==2024.2
 ujson==5.10.0
 uritemplate==4.2.0

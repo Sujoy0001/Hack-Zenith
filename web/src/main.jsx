@@ -17,6 +17,8 @@ import { IssueModalProvider } from './context/IssueModalContext';
 import NotificationsPage from './pages/NotificationsPage';
 import { AuthProvider } from "./context/AuthContext";
 import InboxPage from './pages/InboxPage';
+import Download from './pages/download';
+import Downloadpage from './pages/download';
 
 const router = createBrowserRouter([
   {
@@ -39,6 +41,7 @@ const router = createBrowserRouter([
       { path: "/index/profile", element: <ProfilePage />},
       { path: "/index/notifications", element: <NotificationsPage />},
       { path: "/index/messages", element: <InboxPage />},
+      { path: "/index/download", element: <Downloadpage /> },
       { path: "*", element: <NotFound />}
     ]
   }

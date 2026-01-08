@@ -16,6 +16,7 @@ class LocationModel(BaseModel):
 
 
 class PostCreateModel(BaseModel):
+    id: str
     types: Literal["lost", "found"]
     title: str
     description: Optional[str] = ""
