@@ -314,7 +314,7 @@ export default function RepostPage() {
               </div>
 
               {/* Actions */}
-              <div className="p-5 bg-gray-50 rounded-b-xl">
+              <div className="p-5 rounded-b-xl">
                 <div className="flex justify-end space-x-3">
                   {!post.is_solved && (
                     <button

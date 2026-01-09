@@ -3,7 +3,19 @@ from .ai import match_lost_found
 import asyncio
 
 BATCH_SIZE = 50
-is_running = False
+
+async def monitor_found_collection():
+
+    previous_count = await found_collection.count_documents({})
+
+    old_count = 0
+
+    if old_count < previous_count:
+        await match_lost_found()
+        old_count = previous_count
+    
+    else:
+        print("No new found posts. Skipping matching.")
 
 async def insert_without_duplicates(collection, documents):
     ids = [doc["id"] for doc in documents]
@@ -56,9 +68,11 @@ async def break_posts_collection():
 
     if lost_batch:
         await insert_without_duplicates(lost_collection, lost_batch)
+        await monitor_found_collection()
 
     if found_batch:
         await insert_without_duplicates(found_collection, found_batch)
+        await monitor_found_collection()
 
     return {
         "status": "success",
@@ -66,17 +80,4 @@ async def break_posts_collection():
     }
 
 
-async def monitor_found_collection():
-    
-    global is_running
 
-    previous_count = await found_collection.count_documents({})
-
-    old_count = 0
-
-    if old_count < previous_count:
-        await match_lost_found()
-        old_count = previous_count
-    
-    else:
-        print("No new found posts. Skipping matching.")

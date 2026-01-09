@@ -32,6 +32,8 @@ async def create_post(
     user_email: str = Form(...),
     user_name: str = Form(...),
     user_photo: Optional[str] = Form(None),
+    user_phone: Optional[str] = Form(None),
+
 
     # post
     types: Literal["lost", "found"] = Form(...),
@@ -68,6 +70,7 @@ async def create_post(
             "email": user_email,
             "name": user_name,
             "avatar": user_photo,
+            "phone": user_phone,
         },
         "location": {
             "place": place,
