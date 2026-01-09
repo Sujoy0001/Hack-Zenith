@@ -99,8 +99,8 @@ export default function PostCard({ post }) {
             </div>
             <div className="flex items-center text-sm text-gray-500">
               <MapPin size={14} className="mr-1.5" />
-              <span className="truncate max-w-45">{location?.place || "Location not specified"}</span>
-              <span className="truncate ml-4 max-w-45">{location?.area || "Location not specified"}</span>
+              <span className="truncate max-w-45 mr-2">{location?.place || "Location not specified"}</span> <span>-</span>
+              <span className="truncate ml-2 max-w-45">{location?.area || "Location not specified"}</span>
             </div>
           </div>
         </div>

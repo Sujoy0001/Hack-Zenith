@@ -299,6 +299,11 @@ export default function ViewPage() {
                   post to help spread awareness.
                 </p>
               </div>
+
+              <div className="bg-amber-500/20 border border-gray-300 px-3 py-6 rounded-2xl">
+                <h2 className="text-md font-bold text-gray-600">Name : {post.user?.name}</h2>
+                <p className="text-gray-600 text-md">user email : {post.user?.email}</p>
+              </div>
             </div>
           </div>
         </div>
