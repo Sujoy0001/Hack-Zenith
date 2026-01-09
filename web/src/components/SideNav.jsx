@@ -49,7 +49,7 @@ export default function SideNav() {
         </div>
 
         <div className="p-0">
-            <Button text="Create issue" variant="dark" iconPosition="right" icon={Upload} onClick={() => setOpen(true)} />
+            <Button text="Create post" variant="dark" iconPosition="right" icon={Upload} onClick={() => setOpen(true)} />
         </div>
 
         <IssueUploadModal
