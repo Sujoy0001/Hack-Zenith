@@ -6,11 +6,15 @@ from db.mongodb import posts_collection
 import cloudinary.uploader
 from model.post import PostCreateModel, PostResponseModel
 from ai.brack import break_posts_collection
+import asyncio
+from fastapi import BackgroundTasks
+
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
 MAX_IMAGES = 5
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
+
 
 # ------------------- Cloudinary -------------------
 
@@ -39,6 +43,7 @@ async def create_post(
     types: Literal["lost", "found"] = Form(...),
     title: str = Form(...),
     description: str = Form(""),
+    post_number: str = Form(""),
 
     # location
     place: str = Form(""),
@@ -72,6 +77,7 @@ async def create_post(
             "avatar": user_photo,
             "phone": user_phone,
         },
+        "post_number": post_number,
         "location": {
             "place": place,
             "area": area,
@@ -118,6 +124,7 @@ async def get_all_posts(page: int = 1, limit: int = 10):
             "description": post["description"],
             "images": post["images"],
             "user": post["user"],
+            "post_number": post["post_number"],
             "location": post["location"],
             "tags": post["tags"],
             "created_at": post["created_at"].isoformat(),
@@ -146,6 +153,7 @@ async def get_post(post_id: str):
         "description": post["description"],
         "images": post["images"],
         "user": post["user"],
+        "post_number": post["post_number"],
         "location": post["location"],
         "tags": post["tags"],
         "created_at": post["created_at"].isoformat(),
@@ -200,6 +208,7 @@ async def search_posts(
             "description": post["description"],
             "images": post["images"],
             "user": post["user"],
+            "post_number": post["post_number"],
             "location": post["location"],
             "tags": post["tags"],
             "created_at": post["created_at"].isoformat(),

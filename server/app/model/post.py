@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Literal, Optional
 from datetime import datetime
 
@@ -22,6 +22,7 @@ class PostCreateModel(BaseModel):
     description: Optional[str] = ""
     images: List[str] = []
     user: UserModel
+    post_number: str
     location: LocationModel
     tags: List[str] = []
     created_at: datetime = Field(default_factory=datetime.utcnow)
