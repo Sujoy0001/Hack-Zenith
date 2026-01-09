@@ -8,6 +8,7 @@ export default function IssueUploadModal({ open, onClose }) {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [postnumber, setPostNumber] = useState("");
   const [type, setType] = useState("");
   const [place, setPlace] = useState("");
   const [area, setArea] = useState("");
@@ -36,6 +37,7 @@ export default function IssueUploadModal({ open, onClose }) {
     if (!title.trim()) e.title = "Title is required";
     if (!description.trim()) e.description = "Description is required";
     if (!type) e.type = "Please select a type";
+    if (!postnumber) e.postnumber = "Enter a vaild phone number";
     if (!place.trim() && !area.trim())
       e.location = "Please provide location information";
 
@@ -93,6 +95,7 @@ export default function IssueUploadModal({ open, onClose }) {
       await uploadPost({
         title,
         description,
+        postnumber,
         type,
         place,
         area,
@@ -106,6 +109,7 @@ export default function IssueUploadModal({ open, onClose }) {
       // Reset and close
       setTitle("");
       setDescription("");
+      setPostNumber("");
       setType("");
       setPlace("");
       setArea("");
@@ -201,6 +205,22 @@ export default function IssueUploadModal({ open, onClose }) {
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Phone number <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              value={postnumber}
+              onChange={(e) => setPostNumber(e.target.value)}
+              placeholder="Enter a vaild phone number"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            {errors.postnumber && (
+              <p className="text-red-500 text-xs mt-1">{errors.postnumber}</p>
+            )}
           </div>
 
           {/* Location */}

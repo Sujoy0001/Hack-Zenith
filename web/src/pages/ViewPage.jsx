@@ -300,9 +300,10 @@ export default function ViewPage() {
                 </p>
               </div>
 
-              <div className="bg-amber-500/20 border border-gray-300 px-3 py-6 rounded-2xl">
-                <h2 className="text-md font-bold text-gray-600">Name : {post.user?.name}</h2>
+              <div className="bg-amber-500/20 border border-gray-300 px-3 py-6 rounded-2xl space-y-2">
+                <h2 className="text-lg font-bold text-gray-600">Name : {post.user?.name}</h2>
                 <p className="text-gray-600 text-md">user email : {post.user?.email}</p>
+                <p className="text-gray-600 text-md">user phone number : {post.post_number}</p>
               </div>
             </div>
           </div>
